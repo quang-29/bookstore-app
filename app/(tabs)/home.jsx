@@ -6,30 +6,43 @@ import { COLORS, SIZES } from "../../constants/theme";
 import Welcome from "../../components/Welcome";
 import FormatMoney from "../../components/FormatMoney";
 import { router } from "expo-router";
-// import { useGlobalContext } from "../../context/GlobalProvider";
-import Carousel from "../../components/Carousel";
 import BookCard from "../../components/BookCard";
 import { getBookUpSale } from "../../services/book/getBookUpSale";
+import Category from "../../components/Category";
+import BookSlider from "../../components/BookSlider";
+import BestSellers from "@/components/BookList";
+import BookLayout from "../book/_layout";
+import BookList from "../../components/BookList";
+import instance from "@/axios-instance"; 
+import VerticalBookList from "@/components/VerticalBookList";
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState(""); 
   const [bestSellers, setBestSellers] = useState([]); 
-  // const { user } = useGlobalContext();
-
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    const fetchBestSellers = async () => {
-      const data = await getBookUpSale();
-      if (data) {
-        setBestSellers(data); 
-      } else {
-        console.error("Không thể lấy dữ liệu sách bán chạy");
-      }
-    };
-
-    fetchBestSellers();
-  }, []); 
+      const fetchBestSellers = async () => {
+        try {
+          setLoading(true);
+          const response = await instance.get('/api/book/upSaleBook');
+          if (response.data && response.data.content) {
+            setBestSellers(response.data.content);
+            console.log("Best Sellers:", response.data.content);
+          } else {
+            setBestSellers([]);
+          }
+        } catch (err) {
+          console.error('Error fetching best sellers:', err);
+          setError('Không thể tải danh sách Best Sellers');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchBestSellers();
+    }, []); 
+  
 
   const handleSearch = () => {
     if (query === "") {
@@ -70,16 +83,11 @@ const Home = () => {
           </View>
         </View>
         <Welcome />
-        <Carousel />
-        <View style={styles.bestSellerSection}>
-          <Text style={styles.sectionTitle}>Sách bán chạy gần đây</Text>
-          {/* Hiển thị BookCard với dữ liệu sách bán chạy */}
-          <BookCard books={bestSellers} />
-        </View>
-        <View style={styles.bestSellerSection}>
-          <Text style={styles.sectionTitle}>Truyện ngắn</Text>
-          <BookCard books={bestSellers}/>
-        </View>
+        <BookSlider />
+        <Category />
+        <BookList books={bestSellers} />
+        
+        
       </ScrollView>
     </SafeAreaView>
   );
@@ -89,13 +97,15 @@ const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: COLORS.lightGray,
     flex: 1,
+    paddingLeft: 16,
+    paddingRight: 16,
   },
   scrollViewContent: {
     paddingBottom: 20,
   },
   appBarWrapper: {
-    marginHorizontal: 20,
     marginTop: SIZES.small,
+    paddingHorizontal: 4,
   },
   appBar: {
     flexDirection: "row",
@@ -119,6 +129,7 @@ const styles = StyleSheet.create({
     right: -4,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 999,
   },
   sectionPrice: {
     color: COLORS.red,
@@ -136,8 +147,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   bestSellerSection: {
-    marginTop: 10,
-    paddingHorizontal: 20,
+    
   },
   sectionTitle: {
     fontSize: 18,

@@ -32,7 +32,7 @@ const Welcome = () => {
             Mỗi Trang Sách – Một Hành Trình: Đồng Hành Cùng Bạn 
           </Text>
 
-          <TouchableOpacity style={styles.button} onPress={() => router.push("/sign-in")}>
+          <TouchableOpacity style={styles.button} onPress={() => router.push("/home")}>
             <Text style={styles.buttonText}>Tiếp tục với Email</Text>
           </TouchableOpacity>
         </View>

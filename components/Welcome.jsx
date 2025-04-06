@@ -31,8 +31,7 @@ const Welcome = () => {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    paddingHorizontal: 20,
+    mainContainer: {
     paddingVertical: 10, // Reduced paddingVertical to reduce height
     backgroundColor: COLORS.lightGray,
   },

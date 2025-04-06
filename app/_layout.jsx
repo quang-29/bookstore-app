@@ -43,6 +43,7 @@ const RootLayout = () => {
         <Stack.Screen name="search/[query]" options={{ headerShown: false }} />
         <Stack.Screen name="book" options={{ headerShown: false }} />
         <Stack.Screen name="checkout" options={{ headerShown: false }} />
+        <Stack.Screen name="category" options={{ headerShown: true }} />
       </Stack>
     {/* </GlobalProvider> */}
     </CartProvider>
