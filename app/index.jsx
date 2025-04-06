@@ -3,14 +3,11 @@ import { Redirect, useRouter } from "expo-router";
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { images } from "../constants";
-import { useGlobalContext } from "../context/GlobalProvider";
+// import { useGlobalContext } from "../context/GlobalProvider";
 
 const Welcome = () => {
   const router = useRouter();
-  const {isLoading, isLogIn} = useGlobalContext();
-  if(!isLoading && isLogIn){
-    <Redirect href="/home" />
-  }
+  
 
 
   return (

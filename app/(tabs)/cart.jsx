@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { COLORS, SIZES } from '../../constants/theme';
 import FormatMoney from '../../components/FormatMoney'; 
 import axios from 'axios';
-import { useGlobalContext } from "../../context/GlobalProvider";
+// import { useGlobalContext } from "../../context/GlobalProvider";
 import { IP_CONFIG } from '../../config/ipconfig';
 import { router } from 'expo-router';
 import { useCart } from '../../context/CartContext'; // Import the CartContext
@@ -13,7 +13,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { user, logout, token } = useGlobalContext();
+  // const { user, logout, token } = useGlobalContext();
 
   const fetchData = async () => {
     setLoading(true);

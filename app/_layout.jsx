@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import GlobalProvider from "../context/GlobalProvider";
+// import GlobalProvider from "../context/GlobalProvider";
 import { useFonts } from "expo-font";
 import { View } from "react-native";
 import { SplashScreen, Stack } from "expo-router";
@@ -35,7 +35,7 @@ const RootLayout = () => {
   // }
   return (
     <CartProvider>
-    <GlobalProvider>
+    {/* <GlobalProvider> */}
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -44,7 +44,7 @@ const RootLayout = () => {
         <Stack.Screen name="book" options={{ headerShown: false }} />
         <Stack.Screen name="checkout" options={{ headerShown: false }} />
       </Stack>
-    </GlobalProvider>
+    {/* </GlobalProvider> */}
     </CartProvider>
   );
 };

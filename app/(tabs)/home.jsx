@@ -6,7 +6,7 @@ import { COLORS, SIZES } from "../../constants/theme";
 import Welcome from "../../components/Welcome";
 import FormatMoney from "../../components/FormatMoney";
 import { router } from "expo-router";
-import { useGlobalContext } from "../../context/GlobalProvider";
+// import { useGlobalContext } from "../../context/GlobalProvider";
 import Carousel from "../../components/Carousel";
 import BookCard from "../../components/BookCard";
 import { getBookUpSale } from "../../services/book/getBookUpSale";
@@ -15,7 +15,7 @@ const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState(""); 
   const [bestSellers, setBestSellers] = useState([]); 
-  const { user } = useGlobalContext();
+  // const { user } = useGlobalContext();
 
   
   useEffect(() => {

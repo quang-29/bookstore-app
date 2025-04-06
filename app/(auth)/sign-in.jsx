@@ -16,13 +16,14 @@ import {
 } from "react-native";
 import { images } from "../../constants"; 
 import axios from "axios";
-import { useGlobalContext } from "../../context/GlobalProvider";
+// import { useGlobalContext } from "../../context/GlobalProvider";
 import { getCurrentUser } from "../../services/auth/auth";
 import { IP_CONFIG } from "../../config/ipconfig"; 
+import {storeToken, storeUser} from "../../storage";
 
 const SignIn = () => {
   const router = useRouter();
-  const { setUser, setToken } = useGlobalContext(); // Chỉ gọi hook ở đây
+  // const { setUser, setToken } = useGlobalContext(); // Chỉ gọi hook ở đây
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({ username: "", password: "" });
 
@@ -44,10 +45,11 @@ const SignIn = () => {
 
       if (response.data?.data?.token) {
         const token = response.data.data.token;
-        setToken(token); // Đặt token vào context
+        storeToken(token); 
         try {
-          const userInfo = await getCurrentUser(token); // Gọi API lấy thông tin người dùng
-          setUser(userInfo);  // Đặt thông tin người dùng vào context
+          const userInfo = await getCurrentUser(); 
+          storeUser(userInfo);
+          console.log("userInfo", userInfo);
           
           Alert.alert("Thành công", "Đăng nhập thành công!");
           router.replace("/home");

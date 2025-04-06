@@ -5,7 +5,7 @@ import FormatMoney from '../../components/FormatMoney';
 import { router, useLocalSearchParams } from 'expo-router';
 import { IP_CONFIG } from '../../config/ipconfig';
 import { addBookToCart } from '../../services/cart/cartService';
-import { useGlobalContext } from '../../context/GlobalProvider';
+// import { useGlobalContext } from '../../context/GlobalProvider';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 
