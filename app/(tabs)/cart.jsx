@@ -6,79 +6,81 @@ import axios from 'axios';
 // import { useGlobalContext } from "../../context/GlobalProvider";
 import { IP_CONFIG } from '../../config/ipconfig';
 import { router } from 'expo-router';
-import { useCart } from '../../context/CartContext'; // Import the CartContext
+// import { useCart } from '../../context/CartContext'; // Import the CartContext
+import { getUser,storeUser } from '@/storage';
+import instance from '@/axios-instance';
+import colors from '@/constants/colors';
+import Button from '@/components/Button';
 
 const Cart = () => {
-  const { cartItems, updateCartItems } = useCart();
+  // const { cartItems, updateCartItems } = useCart();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [user, setUser] = useState("");
+  const [cartItems, setCartItems] = useState([]);
+
+  
   // const { user, logout, token } = useGlobalContext();
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      console.log(user);
-      console.log(token);
-      const response = await axios.get(`http://${IP_CONFIG}:8080/api/cart/getCartByUserName/${user.username}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-  
-      console.log('API Response:', response.data.data.cartItem);
-  
-      if (Array.isArray(response.data.data.cartItem)) {
-        const itemsWithSelection = response.data.data.cartItem.map(item => ({
-          ...item,
-          selected: false,
-        }));
-  
-        updateCartItems(itemsWithSelection);
-        setError(null);
-      } else {
-        setError('Giỏ hàng không hợp lệ.');
-      }
-    } catch (error) {
-      console.error('Error fetching cart data:', error);
-      setError('Không thể tải giỏ hàng. Vui lòng thử lại sau.');
-    } finally {
-      setLoading(false);
-    }
+  // Trong useEffect, lưu user vào state sau khi gọi getUser
+useEffect(() => {
+  const init = async () => {
+    const storedUser = await getUser();
+    setUser(storedUser);
+    fetchData(storedUser);
   };
-  
-  const onRefresh = async () => {
-    setRefreshing(true);
-    
-    try {
-      // Fetch the data
-      const response = await axios.get(`http://${IP_CONFIG}:8080/api/cart/getCartByUserName/${user.username}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-     await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Process the data
-      if (Array.isArray(response.data.data.cartItem)) {
-        const itemsWithSelection = response.data.data.cartItem.map(item => ({
-          ...item,
-          selected: false,
-        }));
-  
-        updateCartItems(itemsWithSelection);
-        setError(null);
-      } else {
-        setError('Giỏ hàng không hợp lệ.');
-      }
-    } catch (error) {
-      console.error('Error refreshing cart data:', error);
-      setError('Không thể tải giỏ hàng. Vui lòng thử lại sau.');
-    } finally {
-      setRefreshing(false);
+
+  init();
+}, []);
+
+const fetchData = async (userData) => {
+  setLoading(true);
+  try {
+    const response = await instance.get(`api/cart/getCartByUserName/${userData.username}`);
+    if (Array.isArray(response.data.data.cartItem)) {
+      const itemsWithSelection = response.data.data.cartItem.map(item => ({
+        ...item,
+        selected: false,
+      }));
+      setCartItems(itemsWithSelection);
+      setError(null);
+    } else {
+      setError('Giỏ hàng không hợp lệ.');
     }
-  };
+  } catch (error) {
+    console.error('Error fetching cart data:', error);
+    setError('Không thể tải giỏ hàng. Vui lòng thử lại sau.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const onRefresh = async () => {
+  setRefreshing(true);
+  try {
+    const currentUser = user || await getUser();
+    const response = await instance.get(`api/cart/getCartByUserName/${currentUser.username}`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (Array.isArray(response.data.data.cartItem)) {
+      const itemsWithSelection = response.data.data.cartItem.map(item => ({
+        ...item,
+        selected: false,
+      }));
+      setCartItems(itemsWithSelection);
+      setError(null);
+    } else {
+      setError('Giỏ hàng không hợp lệ.');
+    }
+  } catch (error) {
+    console.error('Error refreshing cart data:', error);
+    setError('Không thể tải giỏ hàng. Vui lòng thử lại sau.');
+  } finally {
+    setRefreshing(false);
+  }
+};
+
 
   useEffect(() => {
     fetchData();
@@ -86,7 +88,7 @@ const Cart = () => {
 
   const handleIncrease = async (id) => {
     try {
-      updateCartItems(cartItems.map(item =>
+      setCartItems(cartItems.map(item =>
         item.cartItemId === id ? { ...item, quantity: item.quantity + 1 } : item
       ));
 
@@ -96,6 +98,22 @@ const Cart = () => {
     }
   };
 
+  const renderEmptyCart = () => (
+    <View style={styles.emptyContainer}>
+      {/* <ShoppingCart size={64} color={colors.gray[300]} /> */}
+      <Text style={styles.emptyTitle}>Your cart is empty</Text>
+      <Text style={styles.emptyText}>
+        Browse our collection and add some books to your cart.
+      </Text>
+      <Button 
+        title="Start Shopping" 
+        style={styles.shopButton}
+        onPress={() => router.push('/home')}
+        
+      />
+    </View>
+  );
+
   const handleDecrease = async (id) => {
     const item = cartItems.find(item => item.cartItemId === id);
     
@@ -103,7 +121,7 @@ const Cart = () => {
     
     if (item.quantity > 1) {
       try {
-        updateCartItems(cartItems.map(item =>
+        setCartItems(cartItems.map(item =>
           item.cartItemId === id ? { ...item, quantity: item.quantity - 1 } : item
         ));
 
@@ -126,7 +144,7 @@ const Cart = () => {
 
   const handleRemoveItem = async (id) => {
     try {
-      updateCartItems(cartItems.filter(item => item.cartItemId !== id));
+      setCartItems(cartItems.filter(item => item.cartItemId !== id));
     } catch (error) {
       console.error('Error removing item:', error);
       fetchData(); 
@@ -134,7 +152,7 @@ const Cart = () => {
   };
 
   const handleSelectItem = (id) => {
-    updateCartItems(cartItems.map(item =>
+    setCartItems(cartItems.map(item =>
       item.cartItemId === id ? { ...item, selected: !item.selected } : item
     ));
   };
@@ -144,7 +162,7 @@ const Cart = () => {
   }
   const handleSelectAll = () => {
     const areAllSelected = cartItems.every(item => item.selected);
-    updateCartItems(cartItems.map(item => ({ ...item, selected: !areAllSelected })));
+    setCartItems(cartItems.map(item => ({ ...item, selected: !areAllSelected })));
   };
   // const handleSelectBook = (id) => {
   //    router.push(`/book/bookDetail?id=${id}`)};
@@ -202,14 +220,16 @@ const Cart = () => {
           </TouchableOpacity>
         </View>
       ) : cartItems.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <Text style={styles.emptyCartText}>Giỏ hàng của bạn đang trống</Text>
-          <TouchableOpacity 
-          style={styles.shopNowButton}
-          onPress={() => router.push("home")}>
-            <Text style={styles.shopNowButtonText}>Mua sắm ngay</Text>
-          </TouchableOpacity>
-        </View>
+
+        renderEmptyCart()
+        // <View style={styles.centerContainer}>
+        //   <Text style={styles.emptyCartText}>Giỏ hàng của bạn đang trống</Text>
+        //   <TouchableOpacity 
+        //   style={styles.shopNowButton}
+        //   onPress={() => router.push("home")}>
+        //     <Text style={styles.shopNowButtonText}>Mua sắm ngay</Text>
+        //   </TouchableOpacity>
+        // </View>
       ) : (
         <View style={styles.contentContainer}>
           <View style={styles.selectAllContainer}>
@@ -432,6 +452,26 @@ const styles = StyleSheet.create({
     fontSize: SIZES.medium,
     color: COLORS.white,
     fontWeight: 'bold',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textLight,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
   },
 });
 

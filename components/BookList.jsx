@@ -11,11 +11,15 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants';
+import { useRouter } from 'expo-router';
+import VerticalBookList from './VerticalBookList';
+import FormatMoney from './FormatMoney';
 
 const { width } = Dimensions.get('window');
 
-const BookList = ({ books, onBookPress }) => {
+const BookList = ({ books }) => {
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     if (books && books.length >= 0) {
@@ -39,11 +43,19 @@ const BookList = ({ books, onBookPress }) => {
     );
   }
 
+  const onBookPress = (book) => {
+    router.push(`/book/${book.id}`);
+  };
+
+  const viewAllBestSellers = () => {
+    // <VerticalBookList books={books} />;
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Best Sellers</Text>
-        <TouchableOpacity style={styles.viewAllButton}>
+        <TouchableOpacity style={styles.viewAllButton} onPress={viewAllBestSellers}>
           <Text style={styles.viewAllText}>View All</Text>
           <MaterialIcons name="keyboard-arrow-right" size={20} color="#6c5ce7" />
         </TouchableOpacity>
@@ -74,12 +86,12 @@ const BookList = ({ books, onBookPress }) => {
               </Text>
               <View style={styles.ratingContainer}>
                 <MaterialIcons name="star" size={16} color="#FFD700" />
-                <Text style={styles.ratingText}>{book.rating || '0'}</Text>
+                <Text style={styles.ratingText}>{book.averageRating || '0'}</Text>
               </View>
               <View style={styles.priceContainer}>
-                <Text style={styles.price}>${parseFloat(book.price || 0).toFixed(2)}</Text>
+                <Text style={styles.price}>{FormatMoney(book.price)}</Text>
                 {book.originalPrice && (
-                  <Text style={styles.originalPrice}>${parseFloat(book.originalPrice).toFixed(2)}</Text>
+                  <Text style={styles.originalPrice}>dd200.000</Text>
                 )}
               </View>
             </View>
@@ -199,8 +211,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 12,
     right: 12,
-    width: 36,
-    height: 36,
+    width: 30,
+    height: 30,
     borderRadius: 18,
     backgroundColor: '#6c5ce7',
     justifyContent: 'center',

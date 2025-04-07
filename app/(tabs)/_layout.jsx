@@ -63,11 +63,6 @@ const TabLayout = () => {
           options={{
             title: "Giỏ hàng",
             headerShown: true,
-            headerLeft: () => (
-              <TouchableOpacity onPress={() => window.history.back()} style={styles.backButton}>
-                <Text style={styles.backText}>Quay lại</Text>
-              </TouchableOpacity>
-            ),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon icon={icons.cartpro} color={color} name="Cart" focused={focused} />
             ),
@@ -78,11 +73,6 @@ const TabLayout = () => {
           options={{
             title: "Đơn hàng",
             headerShown: true,
-            headerLeft: () => (
-              <TouchableOpacity onPress={() => window.history.back()} style={styles.backButton}>
-                <Text style={styles.backText}>Quay lại</Text>
-              </TouchableOpacity>
-            ),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon icon={icons.plus} color={color} name="Order" focused={focused} />
             ),

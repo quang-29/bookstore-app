@@ -27,6 +27,8 @@ export const storeUser = async user => {
   }
 };
 
+
+
 export const getUser = async () => {
   try {
     const userJSON = await AsyncStorage.getItem('user');

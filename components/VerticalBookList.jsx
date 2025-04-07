@@ -10,15 +10,22 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants';
+import { useRouter } from 'expo-router';
+import FormatMoney from './FormatMoney';
 
-const VerticalBookList = ({ books, onBookPress }) => {
+const VerticalBookList = ({ books }) => {
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     if (books && books.length >= 0) {
       setLoading(false);
     }
   }, [books]);
+
+  const onBookPress = (book) => {
+      router.push(`/book/${book.id}`);
+    };
 
   const renderBookItem = ({ item }) => (
     <TouchableOpacity
@@ -40,12 +47,12 @@ const VerticalBookList = ({ books, onBookPress }) => {
         </Text>
         <View style={styles.ratingContainer}>
           <MaterialIcons name="star" size={14} color="#FFD700" />
-          <Text style={styles.ratingText}>{item.rating || '0'}</Text>
+          <Text style={styles.ratingText}>{item.averageRating || '0'}</Text>
         </View>
         <View style={styles.priceContainer}>
-          <Text style={styles.price}>${parseFloat(item.price || 0).toFixed(2)}</Text>
+          <Text style={styles.price}>{FormatMoney(item.price)}</Text>
           {item.originalPrice && (
-            <Text style={styles.originalPrice}>${parseFloat(item.originalPrice).toFixed(2)}</Text>
+            <Text style={styles.originalPrice}>Ddd200.000</Text>
           )}
         </View>
       </View>

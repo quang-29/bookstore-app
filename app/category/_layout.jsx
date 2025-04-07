@@ -6,7 +6,7 @@ const CategoryLayout = () => {
       <Stack.Screen
         name="categoryDetail"
         options={{
-          headerShown: false, // Tắt header mặc định ở layout, để categoryDetail tự xử lý
+          headerShown: false, 
         }}
       />
     </Stack>

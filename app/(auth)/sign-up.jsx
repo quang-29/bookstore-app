@@ -16,6 +16,7 @@ import {
 
 import { images } from "../../constants";
 import { IP_CONFIG } from "../../config/ipconfig"; 
+import instance from "@/axios-instance";
 const SignUp = () => {
   const router = useRouter();
 
@@ -28,34 +29,24 @@ const SignUp = () => {
 
   const submit = async () => {
     if (!form.username || !form.email || !form.password) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
       return;
     }
 
     setSubmitting(true);
     try {
-      // Gọi API đăng ký người dùng
-      const response = await fetch(`http://${IP_CONFIG}:8080/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: form.username,
-          email: form.email,
-          password: form.password,
-        }),
+      const response = await instance.post("/api/auth/register", {
+        username: form.username,
+        email: form.email,
+        password: form.password,
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        Alert.alert("Success", "Account created successfully!");
-        router.replace("/sign-in");
-      } else {
-        Alert.alert("Registration Error", data.message || "Something went wrong.");
-      }
+      Alert.alert("Thành công", "Tạo tài khoản thành công!");
+      router.replace("/sign-in");
+
     } catch (error) {
-      Alert.alert("Registration Error", "Something went wrong. Please try again.");
+      const errorMessage = error.response?.data?.message || "Đã có lỗi xảy ra. Vui lòng thử lại.";
+      Alert.alert("Lỗi đăng ký", errorMessage);
     } finally {
       setSubmitting(false);
     }

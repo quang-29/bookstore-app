@@ -12,6 +12,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -36,24 +37,31 @@ const CategoryScreen = () => {
 
   const handlePressCategory = (categoryName) => {
     router.push({
-      pathname: '/category/categoryDetail', 
+      pathname: '/category/categoryDetail',
       params: { categoryName },
     });
   };
 
   const handlePressViewAll = () => {
-    router.push('/categoryDetail');
+    router.push({
+      pathname: '/category/categoryDetail',
+      params: { categoryName: 'All' }
+    });
+  }
+
+  const viewAllBestSellers = () => {
+    router.push('/category/categoryDetail?categoryName=All');
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.heading}>Categories</Text>
+        <Text style={styles.title}>Categories</Text>
+        <TouchableOpacity style={styles.viewAllButton} onPress={viewAllBestSellers}>
+          <Text style={styles.viewAllText}>View All</Text>
+          <MaterialIcons name="keyboard-arrow-right" size={20} color="#6c5ce7" />
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.categoryDetail} onPress={handlePressViewAll}>
-        <Text>View All</Text>
-        <Ionicons name='chevron-forward-outline' size={14} color={COLORS.gray}/>
-      </TouchableOpacity>
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
@@ -85,7 +93,24 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   header: {
-    position: 'relative',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: '#6c5ce7',
+    fontWeight: '500',
   },
   categoryDetail: {
     position: 'absolute',
@@ -98,7 +123,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heading: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '600',
     color: '#2d3748',
     marginBottom: 16,

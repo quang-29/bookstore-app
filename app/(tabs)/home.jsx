@@ -15,6 +15,9 @@ import BookLayout from "../book/_layout";
 import BookList from "../../components/BookList";
 import instance from "@/axios-instance"; 
 import VerticalBookList from "@/components/VerticalBookList";
+import Search from "./search";
+import SearchBar from "@/components/SearchBar";
+import colors from "@/constants/colors";
 
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -66,7 +69,7 @@ const Home = () => {
       <ScrollView
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.appBarWrapper}>
+        {/* <View style={styles.appBarWrapper}>
           <View style={styles.appBar}>
             <Ionicons name="location-outline" size={26} color={COLORS.dark} />
             <Text style={styles.locationText}>Hà Nội</Text>
@@ -81,8 +84,14 @@ const Home = () => {
               </TouchableOpacity>
             </View>
           </View>
+        </View> */}
+        {/* <Welcome /> */}
+
+        <View style={styles.header}>
+          <Text style={styles.greeting}>Find Books</Text>
+          <Text style={styles.subtitle}>Find your place you belong</Text>
         </View>
-        <Welcome />
+        <SearchBar />
         <BookSlider />
         <Category />
         <BookList books={bestSellers} />
@@ -95,7 +104,7 @@ const Home = () => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: COLORS.lightGray,
+    backgroundColor: colors.background,
     flex: 1,
     paddingLeft: 16,
     paddingRight: 16,
@@ -145,6 +154,21 @@ const styles = StyleSheet.create({
   },
   cartText: {
     color: COLORS.white,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.textLight,
   },
   bestSellerSection: {
     

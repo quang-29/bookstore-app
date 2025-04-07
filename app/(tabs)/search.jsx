@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES } from '../../constants/theme';
 import * as ImagePicker from 'expo-image-picker';
+import colors from '@/constants/colors';
 
 const Search = () => {
   const [query, setQuery] = useState('');
@@ -41,6 +42,16 @@ const Search = () => {
     </View>
   );
 
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      {/* <Book size={64} color={colors.gray[300]} /> */}
+      <Text style={styles.emptyTitle}>Find Your Next Book</Text>
+      <Text style={styles.emptyText}>
+        Search by title, author, or browse categories to discover your next favorite read.
+      </Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
@@ -57,12 +68,14 @@ const Search = () => {
           <Ionicons name="camera-outline" size={24} color={COLORS.white} />
         </TouchableOpacity>
       </View>
+      {results.length === 0 ? renderEmptyState() :
       <FlatList
         data={results}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.resultsList}
       />
+      }
     </View>
   );
 };
@@ -86,6 +99,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textLight,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   input: {
     flex: 1,
