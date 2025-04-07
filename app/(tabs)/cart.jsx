@@ -13,7 +13,7 @@ import colors from '@/constants/colors';
 import Button from '@/components/Button';
 
 const Cart = () => {
-  // const { cartItems, updateCartItems } = useCart();
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -21,13 +21,11 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
 
   
-  // const { user, logout, token } = useGlobalContext();
-
-  // Trong useEffect, lưu user vào state sau khi gọi getUser
 useEffect(() => {
   const init = async () => {
     const storedUser = await getUser();
     setUser(storedUser);
+    console.log("username", storedUser.username);
     fetchData(storedUser);
   };
 
@@ -80,11 +78,6 @@ const onRefresh = async () => {
     setRefreshing(false);
   }
 };
-
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const handleIncrease = async (id) => {
     try {
@@ -173,7 +166,7 @@ const onRefresh = async () => {
         <Text style={styles.checkbox}>{item.selected ? '☑' : '☐'}</Text>
       </TouchableOpacity>
       <TouchableOpacity 
-      onPress={() => router.push(`/book/bookDetail?id=${item.book.id}`)} 
+      onPress={() => router.push(`/book/${item.book.id}`)} 
       style={{ flexDirection: 'row', flex: 1 }}>
       <Image source={{ uri: item.book.imagePath }} style={styles.cartItemImage} />
       <View style={styles.cartItemDetails}>

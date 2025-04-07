@@ -11,7 +11,7 @@ import { getBookUpSale } from "../../services/book/getBookUpSale";
 import Category from "../../components/Category";
 import BookSlider from "../../components/BookSlider";
 import BestSellers from "@/components/BookList";
-import BookLayout from "../book/_layout";
+// import BookLayout from "../book/_layout";
 import BookList from "../../components/BookList";
 import instance from "@/axios-instance"; 
 import VerticalBookList from "@/components/VerticalBookList";

@@ -6,7 +6,8 @@ import {
   ScrollView, 
   Image, 
   Pressable,
-  SafeAreaView
+  SafeAreaView,
+  Alert
 } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import Button from '@/components/Button';
@@ -99,14 +100,11 @@ useEffect(() => {
   
   const handleAddToCart = async () => {
     try {
-      await instance.post('/api/cart/addBookToCart', {
-        cartId: user.cart.cartId,
-        bookId: book.id,
-        quantity: 1,
-      });
-      console.log("Added to cart successfully");
+      await instance.put(`/api/cart/addBookToCart?cartId=${user.cart.cartId}&bookId=${book.id}&quantity=1`);
+      Alert.alert("Thành công", "Đã thêm sách vào giỏ hàng!");
     } catch (error) {
       console.error("Failed to add to cart:", error);
+      Alert.alert("Lỗi", "Không thể thêm sách vào giỏ hàng. Vui lòng thử lại sau.");
     }
   };
   

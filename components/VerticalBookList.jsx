@@ -7,15 +7,18 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  Alert
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants';
 import { useRouter } from 'expo-router';
 import FormatMoney from './FormatMoney';
+import { useCart } from '../context/CartContext';
 
 const VerticalBookList = ({ books }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     if (books && books.length >= 0) {
@@ -24,8 +27,17 @@ const VerticalBookList = ({ books }) => {
   }, [books]);
 
   const onBookPress = (book) => {
-      router.push(`/book/${book.id}`);
-    };
+    router.push(`/book/${book.id}`);
+  };
+
+  const handleAddToCart = async (bookId) => {
+    try {
+      await addToCart(bookId, 1);
+      Alert.alert("Thành công", "Đã thêm sách vào giỏ hàng!");
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể thêm sách vào giỏ hàng. Vui lòng thử lại sau.");
+    }
+  };
 
   const renderBookItem = ({ item }) => (
     <TouchableOpacity
@@ -56,7 +68,10 @@ const VerticalBookList = ({ books }) => {
           )}
         </View>
       </View>
-      <TouchableOpacity style={styles.cartButton}>
+      <TouchableOpacity 
+        style={styles.cartButton}
+        onPress={() => handleAddToCart(item.id)}
+      >
         <MaterialIcons name="shopping-cart" size={20} color="#fff" />
       </TouchableOpacity>
     </TouchableOpacity>
