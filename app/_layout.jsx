@@ -4,6 +4,7 @@ import { useFonts } from "expo-font";
 import { View } from "react-native";
 import { SplashScreen, Stack } from "expo-router";
 import { CartProvider } from "../context/CartContext";
+import { AuthProvider } from "../context/AuthContext";
 
 
 const RootLayout = () => {
@@ -34,19 +35,21 @@ const RootLayout = () => {
   //   return null;
   // }
   return (
-    <CartProvider>
-    {/* <GlobalProvider> */}
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="search/[query]" options={{ headerShown: false }} />
-        <Stack.Screen name="book" options={{ headerShown: false }} />
-        <Stack.Screen name="checkout" options={{ headerShown: false }} />
-        <Stack.Screen name="category" options={{ headerShown: false }} />
-      </Stack>
-    {/* </GlobalProvider> */}
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        {/* <GlobalProvider> */}
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="search/[query]" options={{ headerShown: false }} />
+            <Stack.Screen name="book" options={{ headerShown: false }} />
+            <Stack.Screen name="checkout" options={{ headerShown: false }} />
+            <Stack.Screen name="category" options={{ headerShown: false }} />
+          </Stack>
+        {/* </GlobalProvider> */}
+      </CartProvider>
+    </AuthProvider>
   );
 };
 

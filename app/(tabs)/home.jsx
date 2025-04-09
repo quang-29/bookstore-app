@@ -19,6 +19,9 @@ import Search from "./search";
 import SearchBar from "@/components/SearchBar";
 import colors from "@/constants/colors";
 
+
+
+
 const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState(""); 
@@ -28,11 +31,11 @@ const Home = () => {
   useEffect(() => {
       const fetchBestSellers = async () => {
         try {
-          setLoading(true);
+          
           const response = await instance.get('/api/book/upSaleBook');
           if (response.data && response.data.content) {
             setBestSellers(response.data.content);
-            console.log("Best Sellers:", response.data.content);
+            setLoading(true);
           } else {
             setBestSellers([]);
           }
@@ -64,29 +67,16 @@ const Home = () => {
     });
   };
 
-  return (
+  return loading ? (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text style={{ fontSize: 18, color: colors.text }}>Loading...</Text>  
+    </View>
+  ) : (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollViewContent}>
-        {/* <View style={styles.appBarWrapper}>
-          <View style={styles.appBar}>
-            <Ionicons name="location-outline" size={26} color={COLORS.dark} />
-            <Text style={styles.locationText}>Hà Nội</Text>
-            <View style={styles.cartWrapper}>
-              <View style={styles.cartAccount}>
-                <View style={styles.cartNumber}>
-                  <Text style={styles.cartText}>8</Text>
-                </View>
-              </View>
-              <TouchableOpacity onPress={() => router.push("cart")}>
-                <Ionicons name="cart-outline" size={26} color={COLORS.dark} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View> */}
-        {/* <Welcome /> */}
-
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollViewContent}
+      >
         <View style={styles.header}>
           <Text style={styles.greeting}>Find Books</Text>
           <Text style={styles.subtitle}>Find your place you belong</Text>
@@ -95,11 +85,11 @@ const Home = () => {
         <BookSlider />
         <Category />
         <BookList books={bestSellers} />
-        
-        
+
       </ScrollView>
     </SafeAreaView>
   );
+  
 };
 
 const styles = StyleSheet.create({

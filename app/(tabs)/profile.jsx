@@ -104,7 +104,11 @@ export default function ProfileScreen() {
 
   const navigateTo = (route) => {
     if (isLoggedIn) {
-      router.push(route);
+      if (route === '/wishlist') {
+        router.push('/wishlist');
+      } else {
+        router.push(route);
+      }
     } else {
       Alert.alert(
         'Sign In Required',

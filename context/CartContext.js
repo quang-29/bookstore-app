@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { addBookToCart } from '../services/cart/cartService';
-import { getUser } from '../storage';
+import { getUser, getToken } from '../storage';
 import instance from '../axios-instance';
 
 const CartContext = createContext();
@@ -15,18 +15,18 @@ export const CartProvider = ({ children }) => {
   const addToCart = async (bookId, quantity) => {
     try {
       const user = await getUser();
-      if (!user || !user.token) {
-        throw new Error('User not logged in');
+      const token = await getToken();
+      if (!user && !token) {
+        throw new Error('User not logged in or token is expired');
       }
       
-      const result = await addBookToCart(user.cartId, bookId, quantity, user.token);
-      if (result) {
-        // Refresh cart items after adding
-        const response = await instance.get(`api/cart/getCartByUserName/${user.username}`);
-        if (response.data.data && Array.isArray(response.data.data.cartItem)) {
-          setCartItems(response.data.data.cartItem);
-        }
-      }
+      const result = await addBookToCart(user.cart.cartId, bookId, quantity, token);
+      // if (result) {
+      //   const response = await instance.get(`api/cart/getCartByUserName/${user.username}`);
+      //   if (response.data.data && Array.isArray(response.data.data.cartItem)) {
+      //     setCartItems(response.data.data.cartItem);
+      //   }
+      // }
     } catch (error) {
       console.error('Error adding to cart:', error);
       throw error;
