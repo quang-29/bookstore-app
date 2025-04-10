@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getUser } from '@/storage';
+import { getUser, getToken } from '@/storage';
+import instance from '@/axios-instance';
 
 const AuthContext = createContext();
 
@@ -10,10 +11,21 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const userData = await getUser();
-        setUser(userData);
+        const [userData, token] = await Promise.all([
+          getUser(),
+          getToken()
+        ]);
+
+        if (userData && token) {
+          // Set token in axios instance
+          instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
       } catch (error) {
         console.error('Error loading user:', error);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -22,10 +34,33 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
+  const login = async (userData, token) => {
+    try {
+      // Set token in axios instance
+      instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(userData);
+    } catch (error) {
+      console.error('Error during login:', error);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      // Clear token from axios instance
+      delete instance.defaults.headers.common['Authorization'];
+      setUser(null);
+    } catch (error) {
+      console.error('Error during logout:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
-    setUser,
+    login,
+    logout,
   };
 
   return (

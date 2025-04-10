@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { COLORS, SIZES } from '../../constants/theme';
 import FormatMoney from '../../components/FormatMoney'; 
 import axios from 'axios';
-// import { useGlobalContext } from "../../context/GlobalProvider";
+
 import { IP_CONFIG } from '../../config/ipconfig';
 import { router } from 'expo-router';
 // import { useCart } from '../../context/CartContext'; // Import the CartContext
@@ -11,6 +11,7 @@ import { getUser,storeUser } from '@/storage';
 import instance from '@/axios-instance';
 import colors from '@/constants/colors';
 import Button from '@/components/Button';
+import { useCart } from '@/context/CartContext';
 
 const Cart = () => {
   
@@ -19,6 +20,7 @@ const Cart = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState("");
   const [cartItems, setCartItems] = useState([]);
+  const { addToCart, removeFromCart, decreaseFromCart } = useCart(); 
 
   
 useEffect(() => {
@@ -79,17 +81,76 @@ const onRefresh = async () => {
   }
 };
 
+  
+
   const handleIncrease = async (id) => {
     try {
-      setCartItems(cartItems.map(item =>
+      const currentItem = cartItems.find(item => item.cartItemId === id);
+      if (!currentItem) {
+        throw new Error('Item not found in cart');
+      }
+      await addToCart(currentItem.book.id, 1);
+      const updatedItems = cartItems.map(item =>
         item.cartItemId === id ? { ...item, quantity: item.quantity + 1 } : item
-      ));
-
+      );
+      setCartItems(updatedItems);
     } catch (error) {
-      console.error('Error updating quantity:', error);
-      fetchData();  
+      console.error('Error increasing quantity:', error);
+      Alert.alert('Lỗi', 'Không thể tăng số lượng sản phẩm. Vui lòng thử lại sau.');
     }
   };
+
+  const handleDecrease = async (id) => {
+    try {
+      const currentItem = cartItems.find(item => item.cartItemId === id);
+      if (!currentItem) {
+        Alert.alert('Lỗi', 'Không tìm thấy sản phẩm trong giỏ hàng');
+        return;
+      }
+  
+      if (currentItem.quantity === 1) {
+        Alert.alert(
+          'Xác nhận xóa',
+          'Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?',
+          [
+            {
+              text: 'Hủy',
+              style: 'cancel',
+            },
+            {
+              text: 'Xóa',
+              onPress: async () => {
+                try {
+                  await removeFromCart(currentItem.book.id);
+                  const updatedItems = cartItems.filter(item => item.cartItemId !== id);
+                  setCartItems(updatedItems);
+                } catch (error) {
+                  console.error('Error removing item:', error);
+                  Alert.alert('Lỗi', 'Không thể xóa sản phẩm. Vui lòng thử lại sau.');
+                }
+              },
+            },
+          ]
+        );
+      } else {
+        try {
+          await decreaseFromCart(currentItem.book.id);
+          const updatedItems = cartItems.map(item =>
+            item.cartItemId === id ? { ...item, quantity: item.quantity - 1 } : item
+          );
+          setCartItems(updatedItems);
+        } catch (error) {
+          console.error('Error decreasing quantity:', error);
+          Alert.alert('Lỗi', 'Không thể giảm số lượng sản phẩm. Vui lòng thử lại sau.');
+        }
+      }
+    } catch (error) {
+      console.error('Error in handleDecrease:', error);
+      Alert.alert('Lỗi', 'Đã xảy ra lỗi. Vui lòng thử lại sau.');
+    }
+  };
+  
+  
 
   const renderEmptyCart = () => (
     <View style={styles.emptyContainer}>
@@ -107,33 +168,7 @@ const onRefresh = async () => {
     </View>
   );
 
-  const handleDecrease = async (id) => {
-    const item = cartItems.find(item => item.cartItemId === id);
-    
-    if (!item) return;
-    
-    if (item.quantity > 1) {
-      try {
-        setCartItems(cartItems.map(item =>
-          item.cartItemId === id ? { ...item, quantity: item.quantity - 1 } : item
-        ));
-
-      } catch (error) {
-        console.error('Error updating quantity:', error);
-        fetchData(); 
-      }
-    } else {
-      Alert.alert(
-        "Xác nhận xóa",
-        "Bạn muốn xóa sách ra khỏi giỏ hàng chứ?",
-        [
-          { text: "Hủy", style: "cancel" },
-          { text: "Xóa", onPress: () => handleRemoveItem(id) },
-        ],
-        { cancelable: true }
-      );
-    }
-  };
+  
 
   const handleRemoveItem = async (id) => {
     try {
@@ -215,14 +250,6 @@ const onRefresh = async () => {
       ) : cartItems.length === 0 ? (
 
         renderEmptyCart()
-        // <View style={styles.centerContainer}>
-        //   <Text style={styles.emptyCartText}>Giỏ hàng của bạn đang trống</Text>
-        //   <TouchableOpacity 
-        //   style={styles.shopNowButton}
-        //   onPress={() => router.push("home")}>
-        //     <Text style={styles.shopNowButtonText}>Mua sắm ngay</Text>
-        //   </TouchableOpacity>
-        // </View>
       ) : (
         <View style={styles.contentContainer}>
           <View style={styles.selectAllContainer}>

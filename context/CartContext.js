@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState } from 'react';
-import { addBookToCart } from '../services/cart/cartService';
+import { addBookToCart, removeBookFromCart, decreaseBookFromCart } from '../services/cart/cartService';
 import { getUser, getToken } from '../storage';
 import instance from '../axios-instance';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+  const { user } = useAuth();
 
   const updateCartItems = (items) => {
     setCartItems(items);
@@ -14,27 +16,48 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = async (bookId, quantity) => {
     try {
-      const user = await getUser();
-      const token = await getToken();
-      if (!user && !token) {
-        throw new Error('User not logged in or token is expired');
+      console.log("User", user);
+      if (!user) {
+        throw new Error('User not logged in');
       }
-      
-      const result = await addBookToCart(user.cart.cartId, bookId, quantity, token);
-      // if (result) {
-      //   const response = await instance.get(`api/cart/getCartByUserName/${user.username}`);
-      //   if (response.data.data && Array.isArray(response.data.data.cartItem)) {
-      //     setCartItems(response.data.data.cartItem);
-      //   }
-      // }
+      const result = await addBookToCart(user.cart.cartId, bookId, quantity);
     } catch (error) {
       console.error('Error adding to cart:', error);
       throw error;
     }
   };
 
+  const decreaseFromCart = async (bookId) => {
+    try {
+      console.log("User", user);
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+      const result = await decreaseBookFromCart(user.cart.cartId, bookId);
+      if (!result) {
+        throw new Error('Failed to decrease book quantity');
+      }
+    } catch (error) {
+      console.error('Error decreasing from cart:', error);
+      throw error;
+    }
+  };
+
+  const removeFromCart = async (bookId) => {
+    try{
+      console.log("User", user);
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+      const result = await removeBookFromCart(user.cart.cartId, bookId);
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      throw error;
+    }
+  }
+
   return (
-    <CartContext.Provider value={{ cartItems, updateCartItems, addToCart }}>
+    <CartContext.Provider value={{ cartItems, updateCartItems, addToCart, decreaseFromCart, removeFromCart }}>
       {children}
     </CartContext.Provider>
   );

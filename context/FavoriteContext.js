@@ -1,36 +1,67 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import instance from '@/axios-instance';
+import { useAuth } from '@/context/AuthContext';
 
 const FavoriteContext = createContext();
 
 export const FavoriteProvider = ({ children }) => {
   const [favorites, setFavorites] = useState([]);
+  const { user } = useAuth();
 
   useEffect(() => {
-    loadFavorites();
-  }, []);
+    if (user) {
+      loadFavorites();
+    } else {
+      setFavorites([]);
+    }
+  }, [user]);
 
   const loadFavorites = async () => {
     try {
-      const response = instance.get('/api/book/getFavoriteBooks');
-      const storedFavorites = await AsyncStorage.getItem('favorites');
-      if (storedFavorites) {
-        setFavorites(JSON.parse(storedFavorites));
+      if (!user || !user.userId) {
+        setFavorites([]);
+        return;
+      }
+
+      const response = await instance.get('/api/user/listBooksLikedByUser', {
+        params: { userId: user.userId }
+      });
+      
+      if (response.data.success) {
+        const favoriteBooks = response.data.data || [];
+        setFavorites(favoriteBooks.map(book => book.id || book.bookId));
       }
     } catch (error) {
       console.error('Error loading favorites:', error);
+      setFavorites([]);
     }
   };
 
   const toggleFavorite = async (bookId) => {
+    if (!user || !user.userId) {
+      console.error('User not logged in');
+      return;
+    }
+
     try {
-      const newFavorites = favorites.includes(bookId)
-        ? favorites.filter(id => id !== bookId)
-        : [...favorites, bookId];
+      const isCurrentlyFavorite = favorites.includes(bookId);
+      const endpoint = isCurrentlyFavorite ? '/api/user/unlikeBook' : '/api/user/likeBook';
       
-      setFavorites(newFavorites);
-      await AsyncStorage.setItem('favorites', JSON.stringify(newFavorites));
+      const response = await instance.put(endpoint, null, {
+        params: {
+          userId: user.userId,
+          bookId: bookId,
+        },
+      });
+
+      if (response.data.success) {
+        const newFavorites = isCurrentlyFavorite
+          ? favorites.filter(id => id !== bookId)
+          : [...favorites, bookId];
+        
+        setFavorites(newFavorites);
+      }
     } catch (error) {
       console.error('Error toggling favorite:', error);
     }

@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -15,15 +14,14 @@ import {
   StyleSheet,
 } from "react-native";
 import { images } from "../../constants"; 
-import axios from "axios";
-// import { useGlobalContext } from "../../context/GlobalProvider";
-import { getCurrentUser } from "../../services/auth/auth";
+import instance from "@/axios-instance";
 import { IP_CONFIG } from "../../config/ipconfig"; 
-import {storeToken, storeUser} from "../../storage";
+import { storeToken, storeUser } from "../../storage";
+import { useAuth } from "../../context/AuthContext";
 
 const SignIn = () => {
   const router = useRouter();
-  // const { setUser, setToken } = useGlobalContext(); // Chỉ gọi hook ở đây
+  const { login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({ username: "", password: "" });
 
@@ -35,7 +33,7 @@ const SignIn = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await axios.post(
+      const response = await instance.post(
         `http://${IP_CONFIG}:8080/api/auth/login`,
         {
           username: form.username,
@@ -45,17 +43,20 @@ const SignIn = () => {
 
       if (response.data?.data?.token) {
         const token = response.data.data.token;
-        storeToken(token); 
-        try {
-          const userInfo = await getCurrentUser(); 
-          storeUser(userInfo);
-          console.log("userInfo", userInfo);
+        await storeToken(token);
+        
+        // Get user info
+        const userResponse = await instance.get("api/user/myInfo");
+
+        if (userResponse.data?.data) {
+          const userInfo = userResponse.data.data;
+          await storeUser(userInfo);
+          await login(userInfo, token);
           
           Alert.alert("Thành công", "Đăng nhập thành công!");
           router.replace("/home");
-        } catch (userError) {
-          console.error("Lỗi khi lấy thông tin người dùng:", userError);
-          Alert.alert("Lỗi", "Không thể lấy thông tin người dùng.");
+        } else {
+          throw new Error("Không thể lấy thông tin người dùng");
         }
       } else {
         Alert.alert("Lỗi đăng nhập", response.data.message || "Sai tài khoản hoặc mật khẩu.");
