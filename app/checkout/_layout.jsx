@@ -13,14 +13,6 @@ const CheckOutLayout = () => {
         options={{
           title: 'Thanh toán',
           headerShown: true,
-          headerLeft: () => (
-            <TouchableOpacity 
-              onPress={() => router.back()} 
-              style={{ marginLeft: 20 }}
-            >
-              <Ionicons name="arrow-back-outline" size={24} color="black" />
-            </TouchableOpacity>
-          ),
         }}
       />
     </Stack>

@@ -20,14 +20,13 @@ const Cart = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState("");
   const [cartItems, setCartItems] = useState([]);
-  const { addToCart, removeFromCart, decreaseFromCart } = useCart(); 
+  const { addToCart, removeFromCart, decreaseFromCart, increaseFromCart } = useCart(); 
 
   
 useEffect(() => {
   const init = async () => {
     const storedUser = await getUser();
     setUser(storedUser);
-    console.log("username", storedUser.username);
     fetchData(storedUser);
   };
 
@@ -89,7 +88,7 @@ const onRefresh = async () => {
       if (!currentItem) {
         throw new Error('Item not found in cart');
       }
-      await addToCart(currentItem.book.id, 1);
+      await increaseFromCart(currentItem.book.id,1);
       const updatedItems = cartItems.map(item =>
         item.cartItemId === id ? { ...item, quantity: item.quantity + 1 } : item
       );

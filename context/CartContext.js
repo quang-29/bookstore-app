@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { addBookToCart, removeBookFromCart, decreaseBookFromCart } from '../services/cart/cartService';
+import { addBookToCart, removeBookFromCart, decreaseBookFromCart, increaseBookFromCart } from '../services/cart/cartService';
 import { getUser, getToken } from '../storage';
 import instance from '../axios-instance';
 import { useAuth } from './AuthContext';
@@ -29,7 +29,6 @@ export const CartProvider = ({ children }) => {
 
   const decreaseFromCart = async (bookId) => {
     try {
-      console.log("User", user);
       if (!user) {
         throw new Error('User not logged in');
       }
@@ -45,7 +44,6 @@ export const CartProvider = ({ children }) => {
 
   const removeFromCart = async (bookId) => {
     try{
-      console.log("User", user);
       if (!user) {
         throw new Error('User not logged in');
       }
@@ -56,8 +54,20 @@ export const CartProvider = ({ children }) => {
     }
   }
 
+  const increaseFromCart = async (bookId,quantity) => {
+    try {
+      if (!user) {
+        throw new Error('User not logged in');
+      }
+      const result = await increaseBookFromCart(user.cart.cartId, bookId,quantity);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    }
+  }
+
   return (
-    <CartContext.Provider value={{ cartItems, updateCartItems, addToCart, decreaseFromCart, removeFromCart }}>
+    <CartContext.Provider value={{ cartItems, updateCartItems, addToCart, decreaseFromCart, removeFromCart, increaseFromCart }}>
       {children}
     </CartContext.Provider>
   );

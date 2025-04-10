@@ -55,3 +55,21 @@ export const decreaseBookFromCart = async (cartId, bookId) => {
         return false;
     }
 }
+
+export const increaseBookFromCart = async (cartId, bookId,quantity) => {
+    try {
+        const response = await instance.put(
+            `/api/cart/addBookToCart?cartId=${cartId}&bookId=${bookId}&quantity=${quantity}`,
+            {}
+        );
+        if (response.status === 200) {
+            return true;
+        } else {
+            console.error("Error adding book to cart:", response.status);
+            return null;
+        }
+    } catch (error) {
+        console.error("Error adding book to cart:", error);
+        return null;
+    }
+}
