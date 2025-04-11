@@ -5,11 +5,19 @@ import { icons } from "../../constants";
 import { Loader } from "../../components";
 import { useState, useEffect } from "react";
 import { COLORS, SIZES } from '../../constants/theme';
+import { useCart } from '../../context/CartContext';
 
-const TabIcon = ({ icon, color, name, focused }) => {
+const TabIcon = ({ icon, color, name, focused, badgeCount }) => {
   return (
     <View style={styles.tabContainer}>
-      <Image source={icon} resizeMode="contain" style={[styles.icon, { tintColor: color }]} />
+      <View>
+        <Image source={icon} resizeMode="contain" style={[styles.icon, { tintColor: color }]} />
+        {badgeCount > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badgeCount}</Text>
+          </View>
+        )}
+      </View>
       <Text style={[styles.tabText, { color, fontWeight: focused ? "600" : "400" }]}>
         {name}
       </Text>
@@ -20,6 +28,7 @@ const TabIcon = ({ icon, color, name, focused }) => {
 const TabLayout = () => {
   const [loading, setLoading] = useState(true);
   const [isLogged, setIsLogged] = useState(false);
+  const { totalItems, refreshCart } = useCart();
 
   useEffect(() => {
     setTimeout(() => {
@@ -64,8 +73,19 @@ const TabLayout = () => {
             title: "Giỏ hàng",
             headerShown: true,
             tabBarIcon: ({ color, focused }) => (
-              <TabIcon icon={icons.cartpro} color={color} name="Cart" focused={focused} />
+              <TabIcon 
+                icon={icons.cartpro} 
+                color={color} 
+                name="Cart" 
+                focused={focused} 
+                badgeCount={totalItems}
+              />
             ),
+          }}
+          listeners={{
+            tabPress: () => {
+              refreshCart();
+            },
           }}
         />
         <Tabs.Screen
@@ -114,12 +134,22 @@ const styles = StyleSheet.create({
     borderTopColor: "#232533",
     height: 70,
   },
-  backButton: {
-    marginLeft: 15,
+  badge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: COLORS.primary,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
   },
-  backText: {
-    fontSize: 18,
-    color: COLORS.primary,
+  badgeText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });
 

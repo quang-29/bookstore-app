@@ -15,6 +15,20 @@ const CheckOutLayout = () => {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="transportation"
+        options={{
+          title: 'Phương thức vận chuyển',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="payment"
+        options={{
+          title: 'Phương thức thanh toán',
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 };

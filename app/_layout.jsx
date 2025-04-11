@@ -5,7 +5,7 @@ import { View } from "react-native";
 import { SplashScreen, Stack } from "expo-router";
 import { CartProvider } from "../context/CartContext";
 import { AuthProvider } from "../context/AuthContext";
-
+import { AddressProvider } from "../context/AddressContext";
 
 const RootLayout = () => {
   // const [fontsLoaded, error] = useFonts({
@@ -37,17 +37,20 @@ const RootLayout = () => {
   return (
     <AuthProvider>
       <CartProvider>
-        {/* <GlobalProvider> */}
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="search/[query]" options={{ headerShown: false }} />
-            <Stack.Screen name="book" options={{ headerShown: false }} />
-            <Stack.Screen name="checkout" options={{ headerShown: false }} />
-            <Stack.Screen name="category" options={{ headerShown: false }} />
-          </Stack>
-        {/* </GlobalProvider> */}
+        <AddressProvider>
+          {/* <GlobalProvider> */}
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="search/[query]" options={{ headerShown: false }} />
+              <Stack.Screen name="book" options={{ headerShown: false }} />
+              <Stack.Screen name="checkout" options={{ headerShown: false }} />
+              <Stack.Screen name="category" options={{ headerShown: false }} />
+              <Stack.Screen name="address" options={{ headerShown: false }} />
+            </Stack>
+          {/* </GlobalProvider> */}
+        </AddressProvider>
       </CartProvider>
     </AuthProvider>
   );

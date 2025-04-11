@@ -6,7 +6,6 @@ import axios from 'axios';
 
 import { IP_CONFIG } from '../../config/ipconfig';
 import { router } from 'expo-router';
-// import { useCart } from '../../context/CartContext'; // Import the CartContext
 import { getUser,storeUser } from '@/storage';
 import instance from '@/axios-instance';
 import colors from '@/constants/colors';
@@ -14,73 +13,42 @@ import Button from '@/components/Button';
 import { useCart } from '@/context/CartContext';
 
 const Cart = () => {
-  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState("");
-  const [cartItems, setCartItems] = useState([]);
-  const { addToCart, removeFromCart, decreaseFromCart, increaseFromCart } = useCart(); 
+  const { 
+    cartItems, 
+    addToCart, 
+    removeFromCart, 
+    decreaseFromCart, 
+    increaseFromCart, 
+    refreshCart,
+    toggleSelectAll,
+    toggleSelectItem
+  } = useCart(); 
 
-  
-useEffect(() => {
-  const init = async () => {
-    const storedUser = await getUser();
-    setUser(storedUser);
-    fetchData(storedUser);
+  useEffect(() => {
+    const init = async () => {
+      const storedUser = await getUser();
+      setUser(storedUser);
+      setLoading(false);
+    };
+
+    init();
+  }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshCart();
+    } catch (error) {
+      console.error('Error refreshing cart data:', error);
+      setError('Không thể tải giỏ hàng. Vui lòng thử lại sau.');
+    } finally {
+      setRefreshing(false);
+    }
   };
-
-  init();
-}, []);
-
-const fetchData = async (userData) => {
-  setLoading(true);
-  try {
-    const response = await instance.get(`api/cart/getCartByUserName/${userData.username}`);
-    if (Array.isArray(response.data.data.cartItem)) {
-      const itemsWithSelection = response.data.data.cartItem.map(item => ({
-        ...item,
-        selected: false,
-      }));
-      setCartItems(itemsWithSelection);
-      setError(null);
-    } else {
-      setError('Giỏ hàng không hợp lệ.');
-    }
-  } catch (error) {
-    console.error('Error fetching cart data:', error);
-    setError('Không thể tải giỏ hàng. Vui lòng thử lại sau.');
-  } finally {
-    setLoading(false);
-  }
-};
-
-const onRefresh = async () => {
-  setRefreshing(true);
-  try {
-    const currentUser = user || await getUser();
-    const response = await instance.get(`api/cart/getCartByUserName/${currentUser.username}`);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    if (Array.isArray(response.data.data.cartItem)) {
-      const itemsWithSelection = response.data.data.cartItem.map(item => ({
-        ...item,
-        selected: false,
-      }));
-      setCartItems(itemsWithSelection);
-      setError(null);
-    } else {
-      setError('Giỏ hàng không hợp lệ.');
-    }
-  } catch (error) {
-    console.error('Error refreshing cart data:', error);
-    setError('Không thể tải giỏ hàng. Vui lòng thử lại sau.');
-  } finally {
-    setRefreshing(false);
-  }
-};
-
-  
 
   const handleIncrease = async (id) => {
     try {
@@ -88,11 +56,7 @@ const onRefresh = async () => {
       if (!currentItem) {
         throw new Error('Item not found in cart');
       }
-      await increaseFromCart(currentItem.book.id,1);
-      const updatedItems = cartItems.map(item =>
-        item.cartItemId === id ? { ...item, quantity: item.quantity + 1 } : item
-      );
-      setCartItems(updatedItems);
+      await increaseFromCart(currentItem.book.id, 1);
     } catch (error) {
       console.error('Error increasing quantity:', error);
       Alert.alert('Lỗi', 'Không thể tăng số lượng sản phẩm. Vui lòng thử lại sau.');
@@ -121,8 +85,6 @@ const onRefresh = async () => {
               onPress: async () => {
                 try {
                   await removeFromCart(currentItem.book.id);
-                  const updatedItems = cartItems.filter(item => item.cartItemId !== id);
-                  setCartItems(updatedItems);
                 } catch (error) {
                   console.error('Error removing item:', error);
                   Alert.alert('Lỗi', 'Không thể xóa sản phẩm. Vui lòng thử lại sau.');
@@ -134,10 +96,6 @@ const onRefresh = async () => {
       } else {
         try {
           await decreaseFromCart(currentItem.book.id);
-          const updatedItems = cartItems.map(item =>
-            item.cartItemId === id ? { ...item, quantity: item.quantity - 1 } : item
-          );
-          setCartItems(updatedItems);
         } catch (error) {
           console.error('Error decreasing quantity:', error);
           Alert.alert('Lỗi', 'Không thể giảm số lượng sản phẩm. Vui lòng thử lại sau.');
@@ -148,12 +106,9 @@ const onRefresh = async () => {
       Alert.alert('Lỗi', 'Đã xảy ra lỗi. Vui lòng thử lại sau.');
     }
   };
-  
-  
 
   const renderEmptyCart = () => (
     <View style={styles.emptyContainer}>
-      {/* <ShoppingCart size={64} color={colors.gray[300]} /> */}
       <Text style={styles.emptyTitle}>Your cart is empty</Text>
       <Text style={styles.emptyText}>
         Browse our collection and add some books to your cart.
@@ -162,37 +117,21 @@ const onRefresh = async () => {
         title="Start Shopping" 
         style={styles.shopButton}
         onPress={() => router.push('/home')}
-        
       />
     </View>
   );
 
-  
-
-  const handleRemoveItem = async (id) => {
-    try {
-      setCartItems(cartItems.filter(item => item.cartItemId !== id));
-    } catch (error) {
-      console.error('Error removing item:', error);
-      fetchData(); 
-    }
+  const handleSelectItem = (id) => {
+    toggleSelectItem(id);
   };
 
-  const handleSelectItem = (id) => {
-    setCartItems(cartItems.map(item =>
-      item.cartItemId === id ? { ...item, selected: !item.selected } : item
-    ));
+  const handleSelectAll = () => {
+    toggleSelectAll();
   };
 
   const handleBuy = async () => {
     router.push("/checkout/checkOut");
-  }
-  const handleSelectAll = () => {
-    const areAllSelected = cartItems.every(item => item.selected);
-    setCartItems(cartItems.map(item => ({ ...item, selected: !areAllSelected })));
   };
-  // const handleSelectBook = (id) => {
-  //    router.push(`/book/bookDetail?id=${id}`)};
 
   const renderItem = ({ item }) => (
     <View style={styles.cartItem}>
@@ -200,14 +139,15 @@ const onRefresh = async () => {
         <Text style={styles.checkbox}>{item.selected ? '☑' : '☐'}</Text>
       </TouchableOpacity>
       <TouchableOpacity 
-      onPress={() => router.push(`/book/${item.book.id}`)} 
-      style={{ flexDirection: 'row', flex: 1 }}>
-      <Image source={{ uri: item.book.imagePath }} style={styles.cartItemImage} />
-      <View style={styles.cartItemDetails}>
-        <Text style={styles.cartItemTitle} numberOfLines={2}>{item.book.title}</Text>
-        <Text style={styles.authorText}>{item.book.author}</Text>
-        <Text style={styles.cartItemPrice}>{FormatMoney(item.book.price)}</Text>
-      </View>
+        onPress={() => router.push(`/book/${item.book.id}`)} 
+        style={{ flexDirection: 'row', flex: 1 }}
+      >
+        <Image source={{ uri: item.book.imagePath }} style={styles.cartItemImage} />
+        <View style={styles.cartItemDetails}>
+          <Text style={styles.cartItemTitle} numberOfLines={2}>{item.book.title}</Text>
+          <Text style={styles.authorText}>{item.book.author}</Text>
+          <Text style={styles.cartItemPrice}>{FormatMoney(item.book.price)}</Text>
+        </View>
       </TouchableOpacity>
       
       <View style={styles.quantityContainer}>
@@ -242,12 +182,11 @@ const onRefresh = async () => {
       ) : error ? (
         <View style={styles.centerContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
+          <TouchableOpacity style={styles.retryButton} onPress={onRefresh}>
             <Text style={styles.retryButtonText}>Thử lại</Text>
           </TouchableOpacity>
         </View>
       ) : cartItems.length === 0 ? (
-
         renderEmptyCart()
       ) : (
         <View style={styles.contentContainer}>
