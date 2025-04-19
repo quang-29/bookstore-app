@@ -3,35 +3,31 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import { COLORS, SIZES } from '../../constants';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 
 const Transportation = () => {
   const [selectedMethod, setSelectedMethod] = useState('express');
+  const { fee, deliveryDate } = useLocalSearchParams();
+  
+  const parseDeliveryDate = (dateStr) => {
+    const [day, month, year] = dateStr.split('/');
+    return new Date(`${year}-${month}-${day}`);
+  };
+  const delivery = parseDeliveryDate(deliveryDate);
+  const today = new Date();
+  const diffTime = Math.abs(delivery - today);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
 
   const shippingMethods = [
     {
       id: 'express',
-      title: 'Hỏa Tốc',
-      description: 'Đảm bảo nhận hàng vào ngày mai',
-      price: '₫50.000',
+      title: 'Giao Hàng Nhanh',
+      description: 'Đảm bảo nhận hàng trước ' + deliveryDate ,
+      price: fee,
       icon: 'rocket-outline',
-      time: '1 ngày',
-      voucher: 'Voucher trị giá ₫15.000 nếu đơn hàng được giao đến bạn sau ngày 2 Tháng 4 2025'
-    },
-    {
-      id: 'standard',
-      title: 'Tiêu Chuẩn',
-      description: 'Giao hàng trong 2-3 ngày',
-      price: '₫30.000',
-      icon: 'car-outline',
-      time: '2-3 ngày'
-    },
-    {
-      id: 'economy',
-      title: 'Tiết Kiệm',
-      description: 'Giao hàng trong 4-7 ngày',
-      price: '₫15.000',
-      icon: 'bicycle-outline',
-      time: '4-7 ngày'
+      time: diffDays + ' ngày',
+      voucher: 'Voucher trị giá ₫15.000 nếu đơn hàng được giao đến bạn sau ' + deliveryDate
     }
   ];
 

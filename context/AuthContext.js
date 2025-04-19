@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/storage';
 import instance from '@/axios-instance';
+import { clearStorage } from '@/storage';
+import { storeToken,storeUser } from '@/storage';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -20,8 +23,10 @@ export const AuthProvider = ({ children }) => {
           // Set token in axios instance
           instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           setUser(userData);
+          setToken(token);
         } else {
           setUser(null);
+          setToken(null);
         }
       } catch (error) {
         console.error('Error loading user:', error);
@@ -39,6 +44,9 @@ export const AuthProvider = ({ children }) => {
       // Set token in axios instance
       instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
+      setToken(token);
+      await storeUser(userData); 
+      await storeToken(token); 
     } catch (error) {
       console.error('Error during login:', error);
       throw error;
@@ -47,9 +55,10 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Clear token from axios instance
       delete instance.defaults.headers.common['Authorization'];
       setUser(null);
+      setToken(null);
+      await clearStorage(); 
     } catch (error) {
       console.error('Error during logout:', error);
       throw error;
@@ -58,6 +67,9 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    setUser,
+    token,
+    setToken,
     loading,
     login,
     logout,

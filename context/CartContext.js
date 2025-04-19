@@ -9,7 +9,8 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
-  const { user } = useAuth();
+  const { user,token } = useAuth();
+
 
   const updateCartItems = (items) => {
     const itemsWithSelection = items.map(item => ({
@@ -22,7 +23,9 @@ export const CartProvider = ({ children }) => {
 
   const refreshCart = async () => {
     try {
-      if (!user) return;
+      if (!token || !user) {
+        return;
+      }
       const response = await instance.get(`api/cart/getCartByUserName/${user.username}`);
       if (Array.isArray(response.data.data.cartItem)) {
         const itemsWithSelection = response.data.data.cartItem.map(item => ({
@@ -32,9 +35,10 @@ export const CartProvider = ({ children }) => {
         updateCartItems(itemsWithSelection);
       }
     } catch (error) {
-      console.error('Error refreshing cart:', error);
-    }
+      // console.error('Error refreshing cart:', error);
+    } 
   };
+  
 
   const toggleSelectAll = () => {
     const areAllSelected = cartItems.every(item => item.selected);
@@ -113,10 +117,11 @@ export const CartProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && token) {
       refreshCart();
     }
-  }, [user]);
+  }, [user, token]);
+  
 
   return (
     <CartContext.Provider value={{ 

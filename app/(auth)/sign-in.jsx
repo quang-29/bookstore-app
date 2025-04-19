@@ -56,7 +56,7 @@ const SignIn = () => {
           Alert.alert("Thành công", "Đăng nhập thành công!");
           router.replace("/home");
         } else {
-          throw new Error("Không thể lấy thông tin người dùng");
+          Alert.alert("Lỗi","Không thể lấy thông tin người dùng");
         }
       } else {
         Alert.alert("Lỗi đăng nhập", response.data.message || "Sai tài khoản hoặc mật khẩu.");

@@ -1,55 +1,116 @@
-import React, { useState } from 'react';
-import { View, ScrollView, Text, Image, Switch, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useCart } from '../../context/CartContext';
 import FormatMoney from '../../components/FormatMoney';
 import { COLORS, SIZES } from '../../constants';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import colors from '@/constants/colors';
+import { useAddress } from '../../context/AddressContext';
+import { useAuth } from '@/context/AuthContext';
+import { IP_CONFIG } from '@/config/ipconfig';
+import axios from 'axios';
+import { usePayment } from '../../context/PaymentContext'; 
 
-const checkOut = () => {
+const CheckOut = () => {
   const { cartItems, updateCartItems } = useCart();
-  const [isInsuranceChecked, setInsuranceChecked] = useState(false);
+  const { defaultAddress, setDefaultAddress } = useAddress();
+  const { user, setUser, token, setToken } = useAuth();
+  const [shippingFee, setShippingFee] = useState('');
+  const [deliveryDateFormatted, setDeliveryDateFormatted] = useState('');
+  const { selectedPaymentMethod,handlePaymentByCash, handlePaymentByVNPAY } = usePayment();
+
+    let selectAddress = defaultAddress?.detail + ', ' + defaultAddress?.ward?.name + ', ' + defaultAddress?.district?.name + ', ' + defaultAddress?.province?.name;
+  let selectInfo = defaultAddress?.receiverName + ' (' + defaultAddress?.phoneNumber + ')';
+
+  const method = selectedPaymentMethod;
+
   const [selectedShippingMethod, setSelectedShippingMethod] = useState({
     id: 'express',
-    title: 'Hỏa Tốc',
+    title: 'Giao hàng nhanh',
+    fee: 'đ50.000',
+    deliveryDate: 'ngày 2 tháng 4 2025',
     description: 'Đảm bảo nhận hàng vào ngày mai',
-    voucher: 'Voucher trị giá ₫15.000 nếu đơn hàng được giao đến bạn sau ngày 2 Tháng 4 2025'
+    voucher: 'Voucher trị giá ₫15.000 nếu đơn hàng được giao đến bạn sau ngày 2 Tháng 4 2025',
   });
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState({
-    id: 'cash',
-    title: 'Thanh toán tiền mặt',
-    description: 'Thanh toán khi nhận hàng'
-  });
-
-  const handleSwitchChange = () => {
-    setInsuranceChecked(previousState => !previousState);
-  };
 
   const handleShippingMethodSelect = (method) => {
     setSelectedShippingMethod(method);
   };
 
-  const handlePaymentMethodSelect = (method) => {
-    setSelectedPaymentMethod(method);
+  const getTotalBookPrice = () => {
+    return cartItems.reduce((total, item) => {
+      return total + (item.selected ? item.bookPrice * item.quantity : 0);
+    }, 0);
   };
+
+  const getShippingFee = () => {
+    const feeStr = selectedShippingMethod.fee?.replace(/[^\d]/g, '');
+    return feeStr ? parseInt(feeStr) : 0;
+  };
+
+  const totalPrice = getTotalBookPrice() + getShippingFee();
+
+
+
+  useEffect(() => {
+    if (!defaultAddress) return;
+
+    const fetchBasicShipmentInfor = async () => {
+      try {
+        const response = await axios.post(
+          `http://${IP_CONFIG}:8080/api/address/getBasicShipmentInfo`,
+          defaultAddress,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        const data = response.data;
+        const fee = data.data.fee;
+        const feeFormattedFee = 'đ' + parseInt(fee).toLocaleString('vi-VN');
+        const deliveryDate = data.data.expectedDeliveryDate;
+        const date = new Date(deliveryDate);
+        const formatteddeliveryDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+        setShippingFee(feeFormattedFee);
+        setDeliveryDateFormatted(formatteddeliveryDate);
+        setSelectedShippingMethod({
+          id: 'express',
+          title: 'Giao hàng nhanh',
+          fee: feeFormattedFee,
+          deliveryDate: deliveryDate,
+          description: 'Đảm bảo nhận hàng trước ' + formatteddeliveryDate,
+          voucher: 'Voucher trị giá ₫15.000 nếu đơn hàng được giao đến bạn sau ' + formatteddeliveryDate,
+        });
+      } catch (error) {
+        console.error('Error fetching shipment info:', error);
+        Alert.alert('Lỗi', 'Không thể lấy thông tin vận chuyển');
+      }
+    };
+
+    fetchBasicShipmentInfor();
+  }, [defaultAddress]);
 
   return (
     <View style={styles.mainContainer}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={styles.scrollView}
-      >
-        {/* Delivery Address Section */}
-        <TouchableOpacity style={styles.sectionContainer} onPress={() => router.push('/checkout/address')}>
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+        <TouchableOpacity style={styles.sectionContainer} onPress={() => router.push('/checkout/ListAddress')}>
           <View style={styles.sectionHeader}>
             <Ionicons name="location-outline" size={24} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>Địa chỉ giao hàng</Text>
           </View>
-          <View style={styles.infoSection}>
-            <Text style={styles.header}>Đan Linh (+84) 332 137 474</Text>
-            <Text style={styles.address}>Số 35, Ngõ 95 Thúy Linh, Phường Linh Nam, Quận Hoàng Mai, Hà Nội</Text>
-          </View>
+
+          {defaultAddress == null ? (
+            <View style={styles.infoSection}>
+              <Text style={styles.header}>Bạn chưa thiết lập địa chỉ giao hàng! Vui lòng thêm địa chỉ giao hàng. </Text>
+            </View>
+          ) : (
+            <View style={styles.infoSection}>
+              <Text style={styles.header}>{selectInfo}</Text>
+              <Text style={styles.address}>{selectAddress}</Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         {/* Products Section */}
@@ -75,37 +136,32 @@ const checkOut = () => {
           </View>
         </View>
 
-        {/* Insurance Section */}
-        {/* <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="shield-checkmark-outline" size={24} color={COLORS.primary} />
-            <Text style={styles.sectionTitle}>Bảo hiểm</Text>
-          </View>
-          <View style={styles.insuranceSection}>
-            <Switch
-              value={isInsuranceChecked}
-              onValueChange={handleSwitchChange}
-              trackColor={{ false: COLORS.gray, true: COLORS.primary }}
-              thumbColor={COLORS.white}
-            />
-            <Text style={styles.insuranceText}>Bảo hiểm bảo vệ người tiêu dùng ₫2.999</Text>
-          </View>
-        </View> */}
-
-        {/* Shipping Method Section */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Ionicons name="car-outline" size={24} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>Phương thức vận chuyển</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push('/checkout/transportation')}>
+          <TouchableOpacity
+            onPress={() => {
+              if (shippingFee && deliveryDateFormatted) {
+                router.push({
+                  pathname: 'checkout/Transportation',
+                  params: {
+                    fee: String(shippingFee),
+                    deliveryDate: String(deliveryDateFormatted),
+                  },
+                });
+              } else {
+                Alert.alert('Lỗi', 'Thông tin vận chuyển chưa sẵn sàng');
+              }
+            }}
+          >
             <View style={styles.transportationSection}>
               <View>
                 <Text style={styles.transportationTitle}>{selectedShippingMethod.title}</Text>
                 <Text style={styles.transportationSubtitle}>{selectedShippingMethod.description}</Text>
-                {selectedShippingMethod.voucher && (
-                  <Text style={styles.voucherText}>{selectedShippingMethod.voucher}</Text>
-                )}
+                <Text style={styles.transportationFee}>{selectedShippingMethod.fee}</Text>
+                {selectedShippingMethod.voucher && <Text style={styles.voucherText}>{selectedShippingMethod.voucher}</Text>}
               </View>
               <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
             </View>
@@ -118,11 +174,17 @@ const checkOut = () => {
             <Ionicons name="card-outline" size={24} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push('/checkout/payment')}>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: '/checkout/Payment',
+              })
+            }
+          >
             <View style={styles.paymentSection}>
               <View>
-                <Text style={styles.paymentTitle}>{selectedPaymentMethod.title}</Text>
-                <Text style={styles.paymentSubtitle}>{selectedPaymentMethod.description}</Text>
+                <Text style={styles.paymentTitle}>{method.title}</Text>
+                <Text style={styles.paymentSubtitle}>{method.description}</Text>
               </View>
               <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
             </View>
@@ -138,19 +200,15 @@ const checkOut = () => {
           <View style={styles.summarySection}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Tạm tính</Text>
-              <Text style={styles.summaryValue}>₫294.500</Text>
+              <Text style={styles.summaryValue}>{FormatMoney(getTotalBookPrice())}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Phí vận chuyển</Text>
-              <Text style={styles.summaryValue}>₫0</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Bảo hiểm</Text>
-              <Text style={styles.summaryValue}>{isInsuranceChecked ? '₫2.999' : '₫0'}</Text>
+              <Text style={styles.summaryValue}>{selectedShippingMethod.fee}</Text>
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Tổng cộng</Text>
-              <Text style={styles.totalValue}>₫297.499</Text>
+              <Text style={styles.totalValue}>{FormatMoney(totalPrice)}</Text>
             </View>
             <Text style={styles.savingsText}>Tiết kiệm: ₫49.600</Text>
           </View>
@@ -159,16 +217,17 @@ const checkOut = () => {
 
       {/* Order Button */}
       <View style={styles.footer}>
-        <TouchableOpacity 
-          style={styles.orderButton} 
+        <TouchableOpacity
+          style={styles.orderButton}
           onPress={() => {
-            if (selectedPaymentMethod.id === 'vnpay') {
-              // Handle VNPAY payment
-              alert('Chuyển hướng đến trang thanh toán VNPAY');
-            } else {
-              // Handle cash payment
-              alert('Đơn hàng đã được đặt thành công!');
-            }
+            router.push({
+              pathname: '/checkout/Loading',
+              params: {
+                cartId: user.cart.cartId,
+                addressId: defaultAddress.id,
+                paymentMethod: selectedPaymentMethod.id,
+              },
+            });
           }}
         >
           <Text style={styles.orderButtonText}>Đặt hàng</Text>
@@ -272,18 +331,6 @@ const styles = StyleSheet.create({
     fontSize: SIZES.small,
     color: COLORS.dark,
   },
-  insuranceSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.offWhite,
-    padding: 10,
-    borderRadius: 10,
-  },
-  insuranceText: {
-    marginLeft: 10,
-    fontSize: SIZES.small,
-    color: COLORS.dark,
-  },
   transportationSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -363,7 +410,7 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: "#fff",
+    borderTopColor: '#fff',
   },
   orderButton: {
     backgroundColor: COLORS.primary,
@@ -381,6 +428,13 @@ const styles = StyleSheet.create({
     color: COLORS.success,
     marginTop: 4,
   },
+  transportationFee: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    fontSize: SIZES.xSmall,
+    color: COLORS.success,
+  },
 });
 
-export default checkOut;
+export default CheckOut;

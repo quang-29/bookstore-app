@@ -4,7 +4,7 @@ const CategoryLayout = () => {
   return (
     <Stack>
       <Stack.Screen
-        name="categoryDetail"
+        name="CategoryDetail"
         options={{
           headerShown: false, 
         }}

@@ -6,6 +6,8 @@ import { SplashScreen, Stack } from "expo-router";
 import { CartProvider } from "../context/CartContext";
 import { AuthProvider } from "../context/AuthContext";
 import { AddressProvider } from "../context/AddressContext";
+import {PaymentProvider} from "../context/PaymentContext";
+import {OrderProvider} from "../context/OrderContext"
 
 const RootLayout = () => {
   // const [fontsLoaded, error] = useFonts({
@@ -38,7 +40,8 @@ const RootLayout = () => {
     <AuthProvider>
       <CartProvider>
         <AddressProvider>
-          {/* <GlobalProvider> */}
+          <PaymentProvider>
+            <OrderProvider>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -48,8 +51,11 @@ const RootLayout = () => {
               <Stack.Screen name="checkout" options={{ headerShown: false }} />
               <Stack.Screen name="category" options={{ headerShown: false }} />
               <Stack.Screen name="address" options={{ headerShown: false }} />
+              <Stack.Screen name="order" options={{headerShown: false}} />
+              <Stack.Screen name="wishlist" options={{headerShown: false}} />
             </Stack>
-          {/* </GlobalProvider> */}
+            </OrderProvider>
+          </PaymentProvider>
         </AddressProvider>
       </CartProvider>
     </AuthProvider>

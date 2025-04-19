@@ -27,15 +27,18 @@ import {
 } from 'lucide-react-native';
 import { getUser } from '@/storage';
 import { clearStorage  } from '@/storage';
+import { useAddress } from '@/context/AddressContext';
+import { useAuth } from '@/context/AuthContext';
+
 
 const profileSections = [
   {
     title: 'Account',
     items: [
-      { icon: ShoppingBag, label: 'Orders', route: '/orders' },
-      { icon: Heart, label: 'Wishlist', route: '/wishlist' },
+      { icon: ShoppingBag, label: 'Orders', route: '/order/ListOrders' },
+      { icon: Heart, label: 'Wishlist', route: '/wishlist/WishList' },
       { icon: CreditCard, label: 'Payment Methods', route: '/payment-methods' },
-      { icon: MapPin, label: 'Addresses', route: '/addresses' },
+      { icon: MapPin, label: 'Addresses', route: '/checkout/ListAddress' },
     ]
   },
   {
@@ -55,34 +58,20 @@ const profileSections = [
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [user, setUser] = useState("");
-  // const user = {
-  //   name: 'Quang Minh',
-  //   email: 'vquangn2990@gmail.com'
-  // }
+  const {setDefaultAddress} = useAddress();
+  const {user,setUser,token,setToken, logout} = useAuth();
+  console.log('user',user);
+  console.log('token',token);
+
+  
   const isLoggedIn = true; 
   const handleLogin = () => {
     // router.push('/auth/login');
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userData = await getUser();
-        if (userData) {
-          setUser(userData);
-          console.log('User data:', userData);
-        } else {
-          console.log('No user data found');
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-    fetchUser();
-  }, []);
+  
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     
     Alert.alert(
       'Logout',
@@ -92,9 +81,9 @@ export default function ProfileScreen() {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => {
-            clearStorage(); 
-            setUser(null); 
+          onPress: async () => {
+            await logout();
+            // setDefaultAddress(null);
             router.push('/sign-in'); 
           }
         }

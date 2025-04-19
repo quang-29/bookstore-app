@@ -12,10 +12,12 @@ import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '@/constants';
 import FormatMoney from '@/components/FormatMoney';
-import { useFavorite } from '../context/FavoriteContext';
+import { useFavorite } from '../../context/FavoriteContext';
 import instance from '@/axios-instance';
 import { useAuth } from '@/context/AuthContext';
 import VerticalBookList from '@/components/VerticalBookList';
+import BackButton from '@/components/BackButton';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Wishlist = () => {
   const [loading, setLoading] = useState(true);
@@ -89,7 +91,7 @@ const Wishlist = () => {
   }
 
   return (
-    <VerticalBookList books={favoriteBooks} />
+            <VerticalBookList books={favoriteBooks} /> 
   );
 };
 
@@ -98,6 +100,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.backgroundColor,
     padding: 16,
+  },
+  maincontainer: {
+      flex: 1,
+      backgroundColor: '#fff',
+  },
+  content: {
+    flex: 1,
+    paddingTop: 8,
   },
   loadingContainer: {
     flex: 1,
@@ -176,6 +186,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.gray,
     textDecorationLine: 'line-through',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingLeft: 16,
+    backgroundColor: '#fff',
+  },
+  backButton: {
+    marginRight: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    flex: 1,
   },
 });
 

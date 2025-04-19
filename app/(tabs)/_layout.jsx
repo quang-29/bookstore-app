@@ -88,16 +88,7 @@ const TabLayout = () => {
             },
           }}
         />
-        <Tabs.Screen
-          name="order"
-          options={{
-            title: "Đơn hàng",
-            headerShown: true,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon icon={icons.plus} color={color} name="Order" focused={focused} />
-            ),
-          }}
-        />
+        
         <Tabs.Screen
           name="profile"
           options={{

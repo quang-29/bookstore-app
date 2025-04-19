@@ -3,20 +3,23 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import { COLORS, SIZES } from '../../constants';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import { usePayment } from '../../context/PaymentContext'; // Import PaymentContext hook
 
 const Payment = () => {
-  const [selectedMethod, setSelectedMethod] = useState('cash');
+  const { updateSelectedPaymentMethod, selectedPaymentMethod: contextPaymentMethod } = usePayment();
+  const { selectedPaymentMethod: paramPaymentMethod } = useLocalSearchParams();
+  const selected = contextPaymentMethod; // Use context for selected method
 
   const paymentMethods = [
     {
-      id: 'cash',
+      id: 'CASH',
       title: 'Thanh toán tiền mặt',
       description: 'Thanh toán khi nhận hàng',
       icon: 'cash-outline',
       details: 'Bạn sẽ thanh toán bằng tiền mặt khi nhận được hàng'
     },
     {
-      id: 'vnpay',
+      id: 'VNPAY',
       title: 'VNPAY',
       description: 'Thanh toán qua VNPAY',
       icon: 'card-outline',
@@ -24,13 +27,8 @@ const Payment = () => {
     }
   ];
 
-  const handleSelectMethod = (methodId) => {
-    const selectedPaymentMethod = paymentMethods.find(method => method.id === methodId);
-    router.back();
-    // Pass the selected payment method back to the checkout screen
-    router.setParams({
-      selectedPaymentMethod: JSON.stringify(selectedPaymentMethod)
-    });
+  const handleSelectMethod = (method) => {
+    updateSelectedPaymentMethod(method); // Update context and go back
   };
 
   return (
@@ -41,9 +39,9 @@ const Payment = () => {
             key={method.id}
             style={[
               styles.methodCard,
-              selectedMethod === method.id && styles.selectedMethod
+              selected?.id === method.id && styles.selectedMethod // Use optional chaining
             ]}
-            onPress={() => handleSelectMethod(method.id)}
+            onPress={() => handleSelectMethod(method)}
           >
             <View style={styles.methodHeader}>
               <View style={styles.methodIconContainer}>
@@ -62,7 +60,7 @@ const Payment = () => {
               </View>
             </View>
 
-            {selectedMethod === method.id && (
+            {selected?.id === method.id && ( // Use optional chaining
               <View style={styles.selectedIndicator}>
                 <Ionicons name="checkmark-circle" size={18} color={COLORS.primary} />
               </View>
@@ -153,4 +151,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Payment; 
+export default Payment;

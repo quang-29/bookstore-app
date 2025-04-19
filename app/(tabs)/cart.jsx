@@ -11,12 +11,14 @@ import instance from '@/axios-instance';
 import colors from '@/constants/colors';
 import Button from '@/components/Button';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 
 const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [user, setUser] = useState("");
+  // const [user, setUser] = useState("");
+  const {user,setUser} = useAuth();
   const { 
     cartItems, 
     addToCart, 
@@ -130,7 +132,7 @@ const Cart = () => {
   };
 
   const handleBuy = async () => {
-    router.push("/checkout/checkOut");
+    router.push("/checkout/CheckOut");
   };
 
   const renderItem = ({ item }) => (

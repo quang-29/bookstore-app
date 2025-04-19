@@ -37,7 +37,7 @@ const CategoryScreen = () => {
 
   const handlePressCategory = (categoryName) => {
     router.push({
-      pathname: '/category/categoryDetail',
+      pathname: '/category/CategoryDetail',
       params: { categoryName },
     });
   };
