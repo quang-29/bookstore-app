@@ -7,6 +7,7 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import instance from '@/axios-instance';
 import { useAuth } from '@/context/AuthContext';
 import { router } from 'expo-router';
+import { Switch } from 'react-native';
 
 const AddressScreen = () => {
     const [provinces, setProvinces] = useState([]);
@@ -187,7 +188,7 @@ const AddressScreen = () => {
                     onChangeText={setDetailAddress}
                 />
 
-                <TouchableOpacity
+                {/* <TouchableOpacity
                     style={[styles.defaultButton, isPrimary && styles.defaultButtonActive]}
                     onPress={() => {
                         setIsPrimary(!isPrimary);
@@ -197,7 +198,15 @@ const AddressScreen = () => {
                     <Text style={[styles.defaultButtonText, isPrimary && styles.defaultButtonTextActive]}>
                         {isPrimary ? '✓ Mặc định' : 'Đặt làm mặc định'}
                     </Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                    <Text style={{ flex: 1, fontSize: 16 }}>Đặt làm địa chỉ mặc định</Text>
+                    <Switch
+                        value={isPrimary}
+                        onValueChange={setIsPrimary}
+                        thumbColor={isPrimary ? '#2ecc71' : '#ccc'}
+                    />
+                </View>
 
                 <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
                     <Text style={styles.saveText}>Lưu địa chỉ</Text>

@@ -3,22 +3,32 @@ import instance from "../../axios-instance";
 
 export const addBookToCart = async (cartId, bookId, quantity) => {
     try {
-        const response = await instance.put(
-            `/api/cart/addBookToCart?cartId=${cartId}&bookId=${bookId}&quantity=${quantity}`,
-            {}
+        const response = await instance.post(
+            `/api/cart/addBookToCart`,
+            { cartId, bookId, quantity }
         );
-        if (response.status === 200) {
+
+        if (response.status === 200 || response.status === 201) {
+            const cartData = response.data.data;
             Alert.alert("Thành công", "Thêm sách vào giỏ hàng thành công!");
-            return true;
+            return cartData;
         } else {
-            console.error("Error adding book to cart:", response.status);
+            console.error("Lỗi không xác định:", response.status);
             return null;
         }
     } catch (error) {
-        console.error("Error adding book to cart:", error);
+        const message = error?.response?.data?.message;
+
+        if (message === "Book quantity is less than requested quantity") {
+            Alert.alert("Không đủ hàng", "Số lượng sách trong kho không đủ để thêm vào giỏ hàng.");
+        } else {
+            Alert.alert("Lỗi", message || "Đã xảy ra lỗi khi thêm vào giỏ hàng.");
+        }
         return null;
     }
-}
+};
+
+
 
 export const removeBookFromCart = async (cartId, bookId) => {
     try {
@@ -56,20 +66,29 @@ export const decreaseBookFromCart = async (cartId, bookId) => {
     }
 }
 
-export const increaseBookFromCart = async (cartId, bookId,quantity) => {
+export const increaseBookFromCart = async (cartId, bookId, quantity) => {
     try {
-        const response = await instance.put(
-            `/api/cart/addBookToCart?cartId=${cartId}&bookId=${bookId}&quantity=${quantity}`,
-            {}
+        const response = await instance.post(
+            `/api/cart/addBookToCart`,
+            { cartId, bookId, quantity }
         );
-        if (response.status === 200) {
-            return true;
+
+        if (response.status === 200 || response.status === 201) {
+            const cartData = response.data.data;
+            Alert.alert("Thành công", "Thêm sách vào giỏ hàng thành công!");
+            return cartData;
         } else {
-            console.error("Error adding book to cart:", response.status);
+            console.error("Lỗi không xác định:", response.status);
             return null;
         }
     } catch (error) {
-        console.error("Error adding book to cart:", error);
+        const message = error?.response?.data?.message;
+
+        if (message === "Book quantity is less than requested quantity") {
+            Alert.alert("Không đủ hàng", "Số lượng sách trong kho không đủ đã đạt đến giới hạn.");
+        } else {
+            Alert.alert("Lỗi", message || "Đã xảy ra lỗi khi thêm vào giỏ hàng.");
+        }
         return null;
     }
 }

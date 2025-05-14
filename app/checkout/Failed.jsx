@@ -5,22 +5,24 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ImageBackground,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-const Success = () => {
+const Failed = () => {
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      source={require('../../assets/images/back1.jpg')} // thay bằng ảnh của bạn
+      style={styles.container}
+      resizeMode="cover"
+    >
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
       <View style={styles.box}>
-        <Ionicons name="checkmark-circle" size={64} color="#E53935" style={styles.icon} />
+        <Ionicons name="checkmark-circle" size={64} color="white" style={styles.icon} />
 
-        <Text style={styles.title}>Đặt hàng thành công</Text>
-        <Text style={styles.subtitle}>
-          Cùng BookTopias đồng hành cùng bạn trong những năm tháng tươi đẹp của cuộc đời bạn.
-        </Text>
+        <Text style={styles.title}>Đặt hàng không thành công. Bạn chưa thanh toán nên đơn hàng đang trong quá trình xử lí</Text>
 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={() => router.push('/home')}>
@@ -32,63 +34,61 @@ const Success = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
-export default Success;
+export default Failed;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F4', // ✅ nền xám sáng nhẹ
     justifyContent: 'center',
     alignItems: 'center',
-  },  
+  },
   box: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     padding: 24,
     borderRadius: 16,
     alignItems: 'center',
     marginHorizontal: 20,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
   },
   icon: {
     marginBottom: 20,
+    color: '#039be5'
   },
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#E53935', // đỏ cam hài hòa
+    color: '#37474f',
     marginBottom: 12,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    color: '#616161', // xám đậm
+    color: '#546e7a',
     textAlign: 'center',
     marginBottom: 30,
   },
-  
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
   },
   button: {
-    backgroundColor: '#E53935', // cam đậm
+    backgroundColor: '#ffffff',
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 12,
     marginHorizontal: 5,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
   },
   buttonText: {
-    color: '#FFFFFF', // vẫn tốt nếu nền cam
+    color: '#039be5',
     fontWeight: '600',
     fontSize: 14,
   },
-  
 });

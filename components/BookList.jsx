@@ -184,7 +184,7 @@ const BookList = ({ books }) => {
                             <View style={styles.ratingContainer}>
                                 <MaterialIcons name="star" size={14} color="#FFD700" />
                                 <Text style={styles.ratingText}>
-                                    {book.averageRating ? book.averageRating.toFixed(1) : '0'} ({book.stock || '0'})
+                                    {book.averageRating ? book.averageRating.toFixed(1) : '0'} ({book.stock || '0'} remains)
                                 </Text>
                             </View>
                             <View style={styles.priceContainer}>

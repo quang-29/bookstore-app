@@ -1,53 +1,57 @@
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import React, { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES } from '../../constants/theme';
 import * as ImagePicker from 'expo-image-picker';
 import colors from '@/constants/colors';
+import instance from '@/axios-instance';
+import VerticalBookList from '@/components/VerticalBookList';
 
 const Search = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleSearch = () => {
-    // Perform search logic here
-    console.log('Searching for:', query);
-    // Example search results
-    setResults([
-      { id: 1, title: 'Mộ đom đóm' },
-      { id: 2, title: 'Tôi thấy hoa vàng trên cỏ xanh' },
-      { id: 3, title: 'Lão Hạc' },
-    ]);
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+
+    try {
+      setLoading(true);
+      const res = await instance.get(`/api/book/search?name=${query}`);
+      if (res.data.data && res.data.data.length > 0) {
+        setResults(res.data.data);
+      } else {
+        setResults([]);
+        Alert.alert('Không tìm thấy', 'Không có sách phù hợp với tìm kiếm của bạn.');
+      }
+    } catch (error) {
+      console.error('Error fetching search results:', error);
+      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi tìm kiếm sách.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCamera = async () => {
-    // Request camera permissions
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Camera access is required to find books by camera.');
+      Alert.alert('Từ chối quyền', 'Bạn cần cấp quyền truy cập máy ảnh.');
       return;
     }
 
-    // Launch the camera
     const result = await ImagePicker.launchCameraAsync();
-    if (!result.cancelled) {
-      console.log('Image captured:', result.uri);
-      // Perform image recognition logic here
+    if (!result.canceled && result.assets.length > 0) {
+      const imageUri = result.assets[0].uri;
+      console.log('Image captured:', imageUri);
+      // TODO: Gửi ảnh lên server để tìm sách bằng OCR
     }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.resultItem}>
-      <Text style={styles.resultItemText}>{item.title}</Text>
-    </View>
-  );
-
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      {/* <Book size={64} color={colors.gray[300]} /> */}
-      <Text style={styles.emptyTitle}>Find Your Next Book</Text>
+      <Text style={styles.emptyTitle}>Tìm sách bạn yêu thích</Text>
       <Text style={styles.emptyText}>
-        Search by title, author, or browse categories to discover your next favorite read.
+        Hãy tìm kiếm theo tên sách, tác giả hoặc thể loại.
       </Text>
     </View>
   );
@@ -57,9 +61,11 @@ const Search = () => {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Search for books..."
+          placeholder="Tìm kiếm sách..."
           value={query}
           onChangeText={setQuery}
+          returnKeyType="search"
+          onSubmitEditing={handleSearch}
         />
         <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
           <Ionicons name="search-outline" size={24} color={COLORS.white} />
@@ -68,14 +74,14 @@ const Search = () => {
           <Ionicons name="camera-outline" size={24} color={COLORS.white} />
         </TouchableOpacity>
       </View>
-      {results.length === 0 ? renderEmptyState() :
-      <FlatList
-        data={results}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.resultsList}
-      />
-      }
+
+      {loading ? (
+        <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 30 }} />
+      ) : results.length > 0 ? (
+        <VerticalBookList books={results} />
+      ) : (
+        renderEmptyState()
+      )}
     </View>
   );
 };
@@ -85,7 +91,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: COLORS.lightGray,
-    marginTop: 40,
+    marginTop: 10,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -94,11 +100,27 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    marginBottom: 20,
     shadowColor: COLORS.dark,
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
+  },
+  input: {
+    flex: 1,
+    fontSize: SIZES.medium,
+    color: COLORS.dark,
+  },
+  searchButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 10,
+    padding: 10,
+    marginLeft: 10,
+  },
+  cameraButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 10,
+    padding: 10,
+    marginLeft: 10,
   },
   emptyContainer: {
     flex: 1,
@@ -118,40 +140,6 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     textAlign: 'center',
     lineHeight: 24,
-  },
-  input: {
-    flex: 1,
-    fontSize: SIZES.medium,
-    color: COLORS.dark,
-  },
-  searchButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 10,
-    padding: 10,
-    marginLeft: 10,
-  },
-  cameraButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 10,
-    padding: 10,
-    marginLeft: 10,
-  },
-  resultsList: {
-    paddingBottom: 20,
-  },
-  resultItem: {
-    backgroundColor: COLORS.white,
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: COLORS.dark,
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  resultItemText: {
-    fontSize: SIZES.medium,
-    color: COLORS.dark,
   },
 });
 

@@ -9,7 +9,7 @@ const CheckOutLayout = () => {
   return (
     <Stack>
       <Stack.Screen
-        name="CheckOut"
+        name="Checkout"
         options={{
           title: 'Thanh toán',
           headerShown: true,
@@ -30,24 +30,17 @@ const CheckOutLayout = () => {
         }}
       />
       <Stack.Screen
-        name="Transportation"
+        name="transportation"
         options={{
           title: 'Phương thức vận chuyển',
           headerShown: true,
         }}
       />
       <Stack.Screen
-        name="Payment"
+        name="payment"
         options={{
           title: 'Phương thức thanh toán',
           headerShown: true,
-        }}
-      />
-      <Stack.Screen
-        name='Loading'
-        options={{
-          title: 'Đang xử lý...',
-          headerShown: false,
         }}
       />
       <Stack.Screen

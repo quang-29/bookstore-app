@@ -29,15 +29,7 @@ import { useAddress } from '@/context/AddressContext';
 import { useAuth } from '@/context/AuthContext';
 
 const profileSections = [
-  {
-    title: 'Account',
-    items: [
-      { icon: ShoppingBag, label: 'Orders', route: '/order/ListOrders' },
-      { icon: Heart, label: 'Wishlist', route: '/wishlist/WishList' },
-      { icon: CreditCard, label: 'Payment Methods', route: '/payment-methods' },
-      { icon: MapPin, label: 'Addresses', route: '/checkout/ListAddress' },
-    ]
-  },
+  
   {
     title: 'Preferences',
     items: [

@@ -132,7 +132,7 @@ const Cart = () => {
   };
 
   const handleBuy = async () => {
-    router.push("/checkout/CheckOut");
+    router.push("/checkout/Checkout");
   };
 
   const renderItem = ({ item }) => (
@@ -253,7 +253,8 @@ const styles = StyleSheet.create({
   selectAllContainer: {
     backgroundColor: COLORS.white,
     padding: 5,
-    marginBottom: 8,
+    marginBottom: 10,
+    marginTop: 10,
   },
   selectAllButton: {
     flexDirection: 'row',

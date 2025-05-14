@@ -1,95 +1,88 @@
 import React, { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, View, TouchableOpacity, Alert, StyleSheet, TextInput, ScrollView, Image } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import {
+  Text,
+  View,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  RefreshControl
+} from "react-native";
 import { COLORS, SIZES } from "../../constants/theme";
-import Welcome from "../../components/Welcome";
-import FormatMoney from "../../components/FormatMoney";
-import { router } from "expo-router";
-import BookCard from "../../components/BookCard";
-import { getBookUpSale } from "../../services/book/getBookUpSale";
-import Category from "../../components/Category";
-import BookSlider from "../../components/BookSlider";
-import BestSellers from "@/components/BookList";
-// import BookLayout from "../book/_layout";
-import BookList from "../../components/BookList";
-import instance from "@/axios-instance"; 
-import VerticalBookList from "@/components/VerticalBookList";
-import Search from "./search";
-import SearchBar from "@/components/SearchBar";
 import colors from "@/constants/colors";
+import instance from "@/axios-instance";
 
-
-
+import SearchBar from "@/components/SearchBar";
+import BookSlider from "../../components/BookSlider";
+import Category from "../../components/Category";
+import BookList from "../../components/BookList";
+import Loader from "@/components/Loader";
 
 const Home = () => {
-  const [refreshing, setRefreshing] = useState(false);
-  const [query, setQuery] = useState(""); 
-  const [bestSellers, setBestSellers] = useState([]); 
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-      const fetchBestSellers = async () => {
-        try {
-          
-          const response = await instance.get('/api/book/upSaleBook');
-          if (response.data && response.data.content) {
-            setBestSellers(response.data.content);
-            setLoading(true);
-          } else {
-            setBestSellers([]);
-          }
-        } catch (err) {
-          console.error('Error fetching best sellers:', err);
-          setError('Không thể tải danh sách Best Sellers');
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchBestSellers();
-    }, []); 
-  
+  const [query, setQuery] = useState("");
+  const [bestSellers, setBestSellers] = useState([]);
+  const [loading, setLoading] = useState(true); // loader toàn màn
+  const [refreshing, setRefreshing] = useState(false); // kiểm soát kéo xuống
 
-  const handleSearch = () => {
-    if (query === "") {
-      return Alert.alert(
-        "Missing Query",
-        "Please input something to search results across database"
-      );
+  // HÀM FETCH DÙNG CHUNG
+  const fetchBestSellers = async () => {
+    try {
+      setLoading(true);
+      const response = await instance.get("/api/book/upSaleBook");
+      if (response.data && response.data.content) {
+        setBestSellers(response.data.content);
+      } else {
+        setBestSellers([]);
+      }
+    } catch (err) {
+      console.error("Error fetching best sellers:", err);
+      Alert.alert("Lỗi", "Không thể tải danh sách Best Sellers");
+    } finally {
+      setLoading(false);
+      setRefreshing(false); // khi kéo xuống xong thì dừng refresh
     }
-    console.log("Searching for:", query);
   };
 
-  const handleBookPress = (book) => {
-    router.push({
-      pathname: "bookDetails",
-      params: { bookId: book.id, bookTitle: book.title, bookImage: book.image }
-    });
+  // GỌI KHI LOAD LẦN ĐẦU
+  useEffect(() => {
+    fetchBestSellers();
+  }, []);
+
+  // HÀM GỌI KHI KÉO XUỐNG
+  const onRefresh = () => {
+    setRefreshing(true);  // để RefreshControl biết là đang refresh
+    fetchBestSellers();   // loader sẽ hiển thị
   };
 
-  return loading ? (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text style={{ fontSize: 18, color: colors.text }}>Loading...</Text>  
-    </View>
-  ) : (
+  return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollViewContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="transparent"
+            colors={["transparent"]}
+            progressBackgroundColor="transparent"
+          />
+        }
       >
         <View style={styles.header}>
           <Text style={styles.greeting}>Find Books</Text>
           <Text style={styles.subtitle}>Find your place you belong</Text>
         </View>
+
         <SearchBar />
         <BookSlider />
         <Category />
         <BookList books={bestSellers} />
-
       </ScrollView>
+
+      <Loader isLoading={loading} />
     </SafeAreaView>
   );
-  
 };
 
 const styles = StyleSheet.create({
@@ -102,49 +95,6 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     paddingBottom: 20,
   },
-  appBarWrapper: {
-    marginTop: SIZES.small,
-    paddingHorizontal: 4,
-  },
-  appBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  locationText: {
-    fontSize: 18,
-    color: COLORS.dark,
-  },
-  cartWrapper: {
-    alignItems: "flex-end",
-  },
-  cartAccount: {
-    position: "absolute",
-    borderRadius: 12,
-    height: 18,
-    width: 18,
-    backgroundColor: COLORS.primary,
-    bottom: 16,
-    right: -4,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 999,
-  },
-  sectionPrice: {
-    color: COLORS.red,
-    fontWeight: "bold",
-    marginTop: 5,
-  },
-  cartNumber: {
-    fontFamily: "regular",
-    fontWeight: "600",
-    fontSize: 12,
-    color: COLORS.white,
-    textAlign: "center",
-  },
-  cartText: {
-    color: COLORS.white,
-  },
   header: {
     paddingHorizontal: 16,
     paddingTop: 16,
@@ -152,55 +102,13 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.text,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
     color: colors.textLight,
-  },
-  bestSellerSection: {
-    
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.dark,
-    marginBottom: 10,
-  },
-  bookContainer: {
-    marginRight: 10,
-    alignItems: "center",
-    width: 150,
-    backgroundColor: COLORS.white,
-    borderRadius: 10,
-    padding: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  bookImage: {
-    width: 130,
-    height: 180,
-    borderRadius: 8,
-  },
-  bookTitle: {
-    marginTop: 5,
-    fontSize: 14,
-    color: COLORS.dark,
-    fontWeight: "bold",
-  },
-  iconContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginTop: 10,
   },
 });
 

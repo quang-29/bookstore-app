@@ -12,18 +12,25 @@ export const OrderProvider = ({ children }) => {
 
   const fetchOrder = async () => {
     if (!user?.userId) return;
+  
     try {
       const response = await instance.get(`/api/order/getOrderByUserId/${user.userId}`);
-      setOrders(response.data.data);
+      const data = response?.data?.data;
+      setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      // Nếu là lỗi thật sự (network, 500...), mới log
+      if (error.response?.status !== 404) {
+        return;
+      }
+      setOrders([]); // fallback: vẫn gán rỗng để tránh lỗi hiển thị
     }
   };
-
-  // Optional: fetch tự động khi user thay đổi
+  
   useEffect(() => {
+    if (!user || !user.userId) return;
     fetchOrder();
   }, [user?.userId]);
+  
 
   return (
     <OrderContext.Provider value={{

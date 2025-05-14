@@ -5,17 +5,31 @@ import { AntDesign } from '@expo/vector-icons';
 import FormatMoney from '@/components/FormatMoney';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useOrder } from '@/context/OrderContext';
+import instance from '@/axios-instance';
+import Loader from '@/components/Loader';
 
 const ListOrders = () => {
-  const { orders, fetchOrder } = useOrder(); 
+ 
   const [expandedOrders, setExpandedOrders] = useState({});
   const router = useRouter();
+  const [orders, setOrders] = useState([]);
+  const [loading, setIsLoading] =useState(false);
 
-  useFocusEffect(
-  useCallback(() => {
-    fetchOrder();
-  }, [fetchOrder])
-);
+  useEffect(() => {
+  setIsLoading(true);
+  const fetchAllOrder = async () => {
+    try {
+      const response = await instance.get('/api/order/getAllOrders');
+      const data = response?.data?.data;
+      setOrders(Array.isArray(data) ? data : []);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+    }
+  };
+
+  fetchAllOrder();
+}, []);
 
 
   const toggleExpand = (orderId) => {
@@ -32,7 +46,7 @@ const ListOrders = () => {
     return (
       <TouchableOpacity
         onPress={() =>
-          router.push({ pathname: '/order/OrderDetail', params: { order: JSON.stringify(item) } })
+          router.push({ pathname: '/order/ManageOrder', params: { order: JSON.stringify(item) } })
         }
         style={styles.orderItem}
       >
@@ -92,6 +106,8 @@ const ListOrders = () => {
           </View>
         )}
       />
+
+      <Loader isLoading={loading} message="Đang lấy dữ liệu đơn hàng..." />
     </View>
   );
   

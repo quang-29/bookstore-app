@@ -48,9 +48,9 @@ const TabLayout = () => {
         }}
       >
         <Tabs.Screen
-          name="home"
+          name="dashboard"
           options={{
-            title: "Home",
+            title: "Dashboard",
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon icon={icons.home} color={color} name="Home" focused={focused} />
@@ -58,12 +58,12 @@ const TabLayout = () => {
           }}
         />
         <Tabs.Screen
-          name="search"
+          name="book"
           options={{
-            title: "Search",
+            title: "Book",
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
-              <TabIcon icon={icons.search} color={color} name="Search" focused={focused} />
+              <TabIcon icon={icons.bookmark} color={color} name="Book" focused={focused} />
             ),
           }}
         />
@@ -78,27 +78,21 @@ const TabLayout = () => {
           }}
         />
         <Tabs.Screen
-          name="cart"
+          name="order"
           options={{
-            title: "Giỏ hàng",
+            title: "Quản lí đơn hàng",
             headerShown: true,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 icon={icons.cartpro}
                 color={color}
-                name="Cart"
+                name="Order"
                 focused={focused}
                 badgeCount={totalItems}
               />
             ),
           }}
-          listeners={{
-            tabPress: () => {
-              refreshCart();
-            },
-          }}
         />
-
         <Tabs.Screen
           name="profile"
           options={{

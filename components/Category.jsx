@@ -44,13 +44,13 @@ const CategoryScreen = () => {
 
   const handlePressViewAll = () => {
     router.push({
-      pathname: '/category/categoryDetail',
+      pathname: '/category/CategoryDetail',
       params: { categoryName: 'All' }
     });
   }
 
   const viewAllBestSellers = () => {
-    router.push('/category/categoryDetail?categoryName=All');
+    router.push('/category/CategoryDetail?categoryName=All');
   }
 
   return (

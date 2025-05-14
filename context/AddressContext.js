@@ -36,7 +36,7 @@ export const AddressProvider = ({ children }) => {
         setDefaultAddress(findDefaultAddress);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching address:', error);
+        // console.error('Error fetching address:', error);
       }
     };
   

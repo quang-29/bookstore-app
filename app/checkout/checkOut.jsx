@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+  View, ScrollView, Text, Image, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
+} from 'react-native';
 import { useCart } from '../../context/CartContext';
 import FormatMoney from '../../components/FormatMoney';
 import { COLORS, SIZES } from '../../constants';
@@ -9,18 +11,17 @@ import { useAddress } from '../../context/AddressContext';
 import { useAuth } from '@/context/AuthContext';
 import { IP_CONFIG } from '@/config/ipconfig';
 import axios from 'axios';
-import { usePayment } from '../../context/PaymentContext'; 
+import { usePayment } from '../../context/PaymentContext';
+import Loader from '../../components/Loader';
 
 const CheckOut = () => {
-  const { cartItems, updateCartItems } = useCart();
-  const { defaultAddress, setDefaultAddress } = useAddress();
-  const { user, setUser, token, setToken } = useAuth();
+  const { cartItems, refreshCart } = useCart();
+  const { defaultAddress } = useAddress();
+  const { user, token } = useAuth();
   const [shippingFee, setShippingFee] = useState('');
   const [deliveryDateFormatted, setDeliveryDateFormatted] = useState('');
-  const { selectedPaymentMethod,handlePaymentByCash, handlePaymentByVNPAY } = usePayment();
-
-    let selectAddress = defaultAddress?.detail + ', ' + defaultAddress?.ward?.name + ', ' + defaultAddress?.district?.name + ', ' + defaultAddress?.province?.name;
-  let selectInfo = defaultAddress?.receiverName + ' (' + defaultAddress?.phoneNumber + ')';
+  const { selectedPaymentMethod, handlePaymentByCash, handlePaymentByVNPAY1 } = usePayment();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const method = selectedPaymentMethod;
 
@@ -33,9 +34,12 @@ const CheckOut = () => {
     voucher: 'Voucher trị giá ₫15.000 nếu đơn hàng được giao đến bạn sau ngày 2 Tháng 4 2025',
   });
 
-  const handleShippingMethodSelect = (method) => {
-    setSelectedShippingMethod(method);
-  };
+  const selectAddress = defaultAddress
+    ? `${defaultAddress.detail}, ${defaultAddress.ward?.name}, ${defaultAddress.district?.name}, ${defaultAddress.province?.name}`
+    : '';
+  const selectInfo = defaultAddress
+    ? `${defaultAddress.receiverName} (${defaultAddress.phoneNumber})`
+    : '';
 
   const getTotalBookPrice = () => {
     return cartItems.reduce((total, item) => {
@@ -49,8 +53,6 @@ const CheckOut = () => {
   };
 
   const totalPrice = getTotalBookPrice() + getShippingFee();
-
-
 
   useEffect(() => {
     if (!defaultAddress) return;
@@ -67,21 +69,28 @@ const CheckOut = () => {
             },
           }
         );
+
         const data = response.data;
         const fee = data.data.fee;
         const feeFormattedFee = 'đ' + parseInt(fee).toLocaleString('vi-VN');
-        const deliveryDate = data.data.expectedDeliveryDate;
-        const date = new Date(deliveryDate);
-        const formatteddeliveryDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+        const deliveryDateRaw = data.data.expectedDeliveryDate;
+
+        const formattedDeliveryDate = new Date(deliveryDateRaw).toLocaleDateString('vi-VN', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        });
+
         setShippingFee(feeFormattedFee);
-        setDeliveryDateFormatted(formatteddeliveryDate);
+        setDeliveryDateFormatted(formattedDeliveryDate);
         setSelectedShippingMethod({
           id: 'express',
           title: 'Giao hàng nhanh',
           fee: feeFormattedFee,
-          deliveryDate: deliveryDate,
-          description: 'Đảm bảo nhận hàng trước ' + formatteddeliveryDate,
-          voucher: 'Voucher trị giá ₫15.000 nếu đơn hàng được giao đến bạn sau ' + formatteddeliveryDate,
+          deliveryDate: deliveryDateRaw,
+          description: 'Đảm bảo nhận hàng trước ' + formattedDeliveryDate,
+          voucher: 'Voucher trị giá ₫15.000 nếu đơn hàng được giao đến bạn sau ' + formattedDeliveryDate,
         });
       } catch (error) {
         console.error('Error fetching shipment info:', error);
@@ -92,8 +101,33 @@ const CheckOut = () => {
     fetchBasicShipmentInfor();
   }, [defaultAddress]);
 
+  const handleCheckout = async () => {
+    if (!defaultAddress) {
+      Alert.alert('Thông báo', 'Bạn chưa chọn địa chỉ giao hàng!');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      if (method.id === 'VNPAY') {
+        await handlePaymentByVNPAY1(user.cart.cartId, defaultAddress.id);
+      } else {
+        await handlePaymentByCash(user.cart.cartId, defaultAddress.id);
+        refreshCart();
+        router.replace('/checkout/Success');
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Có lỗi xảy ra khi đặt hàng.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <View style={styles.mainContainer}>
+      <Loader isLoading={isProcessing} message="Đang xử lý đơn hàng..." />
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
         <TouchableOpacity style={styles.sectionContainer} onPress={() => router.push('/checkout/ListAddress')}>
           <View style={styles.sectionHeader}>
@@ -145,7 +179,7 @@ const CheckOut = () => {
             onPress={() => {
               if (shippingFee && deliveryDateFormatted) {
                 router.push({
-                  pathname: 'checkout/Transportation',
+                  pathname: 'checkout/transportation',
                   params: {
                     fee: String(shippingFee),
                     deliveryDate: String(deliveryDateFormatted),
@@ -177,7 +211,7 @@ const CheckOut = () => {
           <TouchableOpacity
             onPress={() =>
               router.push({
-                pathname: '/checkout/Payment',
+                pathname: '/checkout/payment',
               })
             }
           >
@@ -215,24 +249,9 @@ const CheckOut = () => {
         </View>
       </ScrollView>
 
-      {/* Order Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.orderButton}
-          onPress={() => {
-            router.push({
-              pathname: '/checkout/Loading',
-              params: {
-                cartId: user.cart.cartId,
-                addressId: defaultAddress.id,
-                paymentMethod: selectedPaymentMethod.id,
-              },
-            });
-          }}
-        >
-          <Text style={styles.orderButtonText}>Đặt hàng</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.orderButton} onPress={handleCheckout} disabled={isProcessing}>
+        <Text style={styles.orderButtonText}>Đặt hàng</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -241,6 +260,7 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: COLORS.lightGray,
+    position: 'relative',
   },
   scrollView: {
     flex: 1,
@@ -405,6 +425,13 @@ const styles = StyleSheet.create({
     fontSize: SIZES.xSmall,
     color: COLORS.success,
     marginTop: 5,
+  },
+  mainContainer: {
+    flex: 1,
+    backgroundColor: COLORS.lightGray,
+  },
+  scrollView: {
+    flex: 1,
   },
   footer: {
     padding: 12,

@@ -1,20 +1,25 @@
-import React from 'react';
+import {React, useState} from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import FormatMoney from '@/components/FormatMoney';
 import { COLORS, SIZES } from '@/constants/theme';
+import instance from '@/axios-instance';
+import { Alert } from 'react-native';
+import Loader from '@/components/Loader';
+
 
 const OrderDetail = () => {
   const { order } = useLocalSearchParams();
   const orderData = JSON.parse(order);
+  const [isLoading, setIsLoading] = useState(false);
 
   const shippingFee = 20000;
   const totalAmount = orderData.payment.amount + shippingFee;
-  
+
   const formatToVietnamTime = (rawDate) => {
     const date = new Date(rawDate);
-    const vietnamDate = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-    return vietnamDate.toLocaleString('vi-VN', {
+    return date.toLocaleString('vi-VN', {
+      timeZone: 'Asia/Ho_Chi_Minh',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -22,7 +27,23 @@ const OrderDetail = () => {
       minute: '2-digit',
     });
   };
-  
+  const handleCancelOrder = async () => {
+    setIsLoading(true);
+    try {
+      const response = await instance.post(`/api/order/cancelOrder?orderId=${orderData.orderId}`);
+
+      if (response.status === 200) {
+        Alert.alert('Huỷ đơn hàng', 'Đơn hàng đã được huỷ thành công.');
+      } else {
+        Alert.alert('Lỗi', 'Không thể huỷ đơn hàng. Vui lòng thử lại.');
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi huỷ đơn hàng.');
+    } finally{
+      setIsLoading(false);
+    }
+  };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -30,14 +51,33 @@ const OrderDetail = () => {
         {/* Ngày giao hàng */}
         <View style={styles.orderInfo}>
           <Text style={styles.sectionTitle}>Ngày đảm bảo nhận hàng</Text>
-          <Text style={styles.infoText}>Đơn hàng sẽ được giao trễ nhất vào <Text style={styles.bold}>{orderData.estimatedDeliveryDate?formatToVietnamTime(orderData.estimatedDeliveryDate): null}</Text></Text>
+          <Text style={styles.infoText}>Đơn hàng sẽ được giao trễ nhất vào <Text style={styles.bold}>{orderData.estimatedDeliveryDate ? formatToVietnamTime(orderData.estimatedDeliveryDate) : null}</Text></Text>
         </View>
 
         {/* Vận chuyển */}
         <View style={styles.orderInfo}>
           <Text style={styles.sectionTitle}>Thông tin vận chuyển</Text>
           <Text style={styles.infoText}>Giao hàng nhanh - Express Delivery</Text>
-          <Text style={styles.status}>Người gửi đang chuẩn bị hàng</Text>
+          <Text style={styles.status}>
+            {(() => {
+              const status = orderData.payment.status;
+              if (status === 'PENDING') {
+                return 'Đơn hàng đang được xử lý';
+              } else if (status === 'COMPLETED' || status === 'COD') {
+                return 'Đơn hàng đang được xác nhận';
+              } else if (status === 'CONFIRMED') {
+                return 'Đơn hàng đã được xác nhận';
+              } else if (status === 'IN_TRANSIT') {
+                return 'Đơn hàng đang được giao';
+              } else if (status === 'DELIVERED') {
+                return 'Đơn hàng đã được giao';
+              } else if (status === 'CANCELLED') {
+                return 'Đơn hàng đã bị huỷ';
+              } else {
+                return 'Trạng thái không xác định';
+              }
+            })()}
+          </Text>
         </View>
 
         {/* Địa chỉ nhận hàng */}
@@ -103,13 +143,20 @@ const OrderDetail = () => {
 
       {/* Hành động - Fixed ở cuối màn hình */}
       <View style={styles.footer}>
-        <TouchableOpacity style={[styles.actionButton, styles.cancelButton]}>
-          <Text style={styles.actionText}>Hủy đơn hàng</Text>
-        </TouchableOpacity>
+        {(orderData.payment.status === 'PENDING' || orderData.payment.status === 'COD') && (
+          <TouchableOpacity
+            style={[styles.actionButton, styles.contactButton]}
+            onPress={handleCancelOrder}
+          >
+            <Text style={styles.actionText}>Huỷ đơn hàng</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity style={[styles.actionButton, styles.contactButton]}>
           <Text style={styles.actionText}>Liên hệ shop</Text>
         </TouchableOpacity>
       </View>
+      <Loader isLoading={isLoading} message="Đang xử lí..." />
     </SafeAreaView>
   );
 };

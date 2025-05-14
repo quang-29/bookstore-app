@@ -58,8 +58,9 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = async (bookId, quantity) => {
     try {
-      if (!user) {
-        throw new Error('User not logged in');
+      if (!user || !user.cart?.cartId) {
+        console.warn('User not logged in or cart not available');
+        return;
       }
       const result = await addBookToCart(user.cart.cartId, bookId, quantity);
       if (result) {
@@ -67,14 +68,14 @@ export const CartProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
-      throw error;
     }
   };
 
   const decreaseFromCart = async (bookId) => {
     try {
-      if (!user) {
-        throw new Error('User not logged in');
+      if (!user || !user.cart?.cartId) {
+        console.warn('User not logged in or cart not available');
+        return;
       }
       const result = await decreaseBookFromCart(user.cart.cartId, bookId);
       if (result) {
@@ -82,14 +83,14 @@ export const CartProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error decreasing from cart:', error);
-      throw error;
     }
   };
 
   const removeFromCart = async (bookId) => {
     try {
-      if (!user) {
-        throw new Error('User not logged in');
+      if (!user || !user.cart?.cartId) {
+        console.warn('User not logged in or cart not available');
+        return;
       }
       const result = await removeBookFromCart(user.cart.cartId, bookId);
       if (result) {
@@ -97,22 +98,21 @@ export const CartProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error removing from cart:', error);
-      throw error;
     }
   };
 
   const increaseFromCart = async (bookId, quantity) => {
     try {
-      if (!user) {
-        throw new Error('User not logged in');
+      if (!user || !user.cart?.cartId) {
+        console.warn('User not logged in or cart not available');
+        return;
       }
       const result = await increaseBookFromCart(user.cart.cartId, bookId, quantity);
       if (result) {
         await refreshCart();
       }
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      throw error;
+      console.error('Error increasing from cart:', error);
     }
   };
 

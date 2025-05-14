@@ -5,6 +5,7 @@ import VerticalBookList from '@/components/VerticalBookList';
 import instance from '@/axios-instance';
 import BackButton from '@/components/BackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Loader from '../../components/Loader';
 
 const CategoryDetail = () => {
   const { categoryName } = useLocalSearchParams();
@@ -21,12 +22,14 @@ const CategoryDetail = () => {
           response = await instance.get(`/api/book/getAllBooksByCategory/${categoryName}`);
         }
         setBookCategory(response.data.content);
-        setLoading(false);
       } catch (error) {
         console.error('Error fetching category:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchBooks();
+
     return () => {
       setBookCategory([]);
     };
@@ -44,13 +47,12 @@ const CategoryDetail = () => {
           <BackButton style={styles.backButton} />
           <Text style={styles.title}>{categoryName}</Text>
         </View>
+
         <View style={styles.content}>
-          {loading ? (
-            <Text>Loading...</Text>
-          ) : (
-            <VerticalBookList books={bookCategory} />
-          )}
+          <VerticalBookList books={bookCategory} />
         </View>
+
+        <Loader isLoading={loading} message="Đang tải sách..." />
       </View>
     </SafeAreaView>
   );
@@ -64,6 +66,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    position: 'relative', // cần cho loader hoạt động đúng
   },
   header: {
     flexDirection: 'row',

@@ -33,7 +33,7 @@ const Welcome = () => {
           </Text>
 
           <TouchableOpacity style={styles.button} onPress={() => router.push("/sign-in")}>
-            <Text style={styles.buttonText}>Tiếp tục với Email</Text>
+            <Text style={styles.buttonText}>Tiếp tục với đăng nhập</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
