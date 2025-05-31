@@ -1,4 +1,4 @@
-import { React, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import instance from '@/axios-instance';
@@ -12,23 +12,38 @@ const DashboardScreen = () => {
   const [revenue, setRevenue] = useState(0);
   const [bestSellers, setBestSellers] = useState([]);
   const [showAll, setShowAll] = useState(false);
+  const [recentOrders, setRecentOrders] = useState([]);
 
+  const fetchRecentOrders = async () => {
+    try {
+      const response = await instance.get('/api/order/getAllOrders');
+      const sortedOrders = response.data.data.sort(
+        (a, b) => new Date(b.createAt) - new Date(a.createAt)
+      );
+      setRecentOrders(sortedOrders.slice(0, 5));
+    } catch (error) {
+      console.error('Lỗi khi lấy đơn hàng:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await instance.get('/api/user/getNumberOfUsers');
+        const responseUsers = await instance.get('/api/user/getNumberOfUsers');
         const responseOrders = await instance.get('/api/order/getNumberOfOrders');
         const responseBooks = await instance.get('/api/book/getNumberOfBooks');
         const responseRevenue = await instance.get('/api/payment/calculateRevenue');
         const responseBestSeller = await instance.get('/api/book/upSaleBook');
+
         setRevenue(responseRevenue.data);
         setNumberOfBooks(responseBooks.data);
         setNumberOfOrders(responseOrders.data);
-        setNumberOfUsers(response.data);
+        setNumberOfUsers(responseUsers.data);
         setBestSellers(responseBestSeller.data.content);
+
+        fetchRecentOrders();
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error('Error fetching dashboard data:', error);
       }
     };
 
@@ -39,7 +54,6 @@ const DashboardScreen = () => {
     <ScrollView style={styles.container}>
       <Text style={styles.header}>Dashboard Admin</Text>
 
-      {/* Card Section */}
       <View style={styles.cardContainer}>
         <Card icon={<Ionicons name="book" size={32} color="#fff" />} title="Sách" value={numberOfBooks} bg="#4CAF50" />
         <Card icon={<FontAwesome5 name="shopping-cart" size={28} color="#fff" />} title="Đơn hàng" value={numberOfOrders} bg="#2196F3" />
@@ -49,7 +63,6 @@ const DashboardScreen = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Các sách bán chạy gần đây:</Text>
-
         {(showAll ? bestSellers : bestSellers.slice(0, 5)).map((book, index) => (
           <TouchableOpacity key={index} style={styles.orderItem} onPress={() => router.push(`/book/${book.id}`)}>
             <Image
@@ -60,7 +73,7 @@ const DashboardScreen = () => {
               <Text style={styles.title}>{book.title}</Text>
               <Text style={styles.author}>{book.author}</Text>
             </View>
-            <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'center' }}>
+            <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
               <Text style={styles.price}>₫{book.price.toLocaleString('vi-VN')}</Text>
             </View>
           </TouchableOpacity>
@@ -75,20 +88,28 @@ const DashboardScreen = () => {
         )}
       </View>
 
-
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Đơn hàng gần đây</Text>
-        <View style={styles.orderItem}>
-          <Text>Đơn hàng #1001 - Nguyễn Văn A</Text>
-          <Text style={styles.price}>₫150.000</Text>
-        </View>
-        <View style={styles.orderItem}>
-          <Text>Đơn hàng #1002 - Trần Thị B</Text>
-          <Text style={styles.price}>₫300.000</Text>
-        </View>
-        {/* Add more order items here */}
+        {recentOrders.map((order) => (
+          <TouchableOpacity key={order.orderId} style={styles.orderCard}
+            onPress={() =>
+              router.push({
+                pathname: '/order/ManageOrder',
+                params: { order: JSON.stringify(order) },
+              })
+        }
+          >
+            <Text style={styles.cardTitle}>Đơn hàng #{order.orderId}</Text>
+            <Text style={styles.cardText}>Người nhận: {order.userAddress.receiverName}</Text>
+            <Text style={styles.cardText}>
+              Tổng tiền: <Text style={styles.cardPrice}>₫{order.payment.amount.toLocaleString('vi-VN')}</Text>
+            </Text>
+            <Text style={styles.cardText}>
+              Ngày đặt: {new Date(order.createAt).toLocaleDateString('vi-VN')}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
-
     </ScrollView>
   );
 };
@@ -115,19 +136,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     elevation: 5,
   },
-  cardTitle: { color: '#fff', marginTop: 8, fontSize: 16 },
-  cardValue: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  section: { marginTop: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: '600', marginBottom: 12 },
-  orderItem: {
+  cardTitle: { fontSize: 16, marginTop: 8, fontWeight: 'bold', color: 'black' },
+  cardValue: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
+
+  section: {
     backgroundColor: '#fff',
+    padding: 16,
+    marginBottom: 16,
+    borderRadius: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  orderItem: {
+    backgroundColor: '#f8f8f8',
     padding: 12,
     borderRadius: 8,
-    marginBottom: 8,
+    marginBottom: 10,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  price: { fontWeight: 'bold', color: '#333' },
   title: {
     fontSize: 16,
     fontWeight: '600',
@@ -141,7 +171,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FF8C00',
   },
-
+  orderCard: {
+    backgroundColor: '#fdfdfd',
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  cardText: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 4,
+  },
+  cardPrice: {
+    color: 'green',
+    fontWeight: 'bold',
+  },
 });
 
 export default DashboardScreen;

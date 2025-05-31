@@ -18,9 +18,10 @@ const TabIcon = ({ icon, color, name, focused, badgeCount }) => {
           </View>
         )}
       </View>
-      <Text style={[styles.tabText, { color, fontWeight: focused ? "600" : "400" }]}>
+      <Text style={[styles.tabText, { color }]}>
         {name}
       </Text>
+
     </View>
   );
 };

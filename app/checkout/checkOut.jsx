@@ -6,13 +6,15 @@ import { useCart } from '../../context/CartContext';
 import FormatMoney from '../../components/FormatMoney';
 import { COLORS, SIZES } from '../../constants';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { useAddress } from '../../context/AddressContext';
 import { useAuth } from '@/context/AuthContext';
 import { IP_CONFIG } from '@/config/ipconfig';
 import axios from 'axios';
 import { usePayment } from '../../context/PaymentContext';
 import Loader from '../../components/Loader';
+import { Pressable } from 'react-native';
+import { useRouter,Stack } from 'expo-router';
+
 
 const CheckOut = () => {
   const { cartItems, refreshCart } = useCart();
@@ -22,6 +24,7 @@ const CheckOut = () => {
   const [deliveryDateFormatted, setDeliveryDateFormatted] = useState('');
   const { selectedPaymentMethod, handlePaymentByCash, handlePaymentByVNPAY1 } = usePayment();
   const [isProcessing, setIsProcessing] = useState(false);
+  const router = useRouter();
 
   const method = selectedPaymentMethod;
 
@@ -127,6 +130,28 @@ const CheckOut = () => {
 
   return (
     <View style={styles.mainContainer}>
+        {/* <View style={styles.headerContainer}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+          </TouchableOpacity>
+
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Thanh toán</Text>
+          </View>
+          <View style={styles.rightPlaceholder} />
+        </View> */}
+        <Stack.Screen
+          options={{
+            title: 'Thanh toán',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+              </Pressable>
+            ),
+        }}
+        />
+
       <Loader isLoading={isProcessing} message="Đang xử lý đơn hàng..." />
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
         <TouchableOpacity style={styles.sectionContainer} onPress={() => router.push('/checkout/ListAddress')}>
@@ -261,6 +286,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.lightGray,
     position: 'relative',
+    marginTop: 20,
   },
   scrollView: {
     flex: 1,
@@ -444,6 +470,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 15,
     alignItems: 'center',
+    marginBottom: 20,
   },
   orderButtonText: {
     color: COLORS.white,
@@ -462,6 +489,38 @@ const styles = StyleSheet.create({
     fontSize: SIZES.xSmall,
     color: COLORS.success,
   },
+  headerContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: 10,
+  backgroundColor: COLORS.white,
+  borderBottomWidth: 1,
+  borderBottomColor: COLORS.lightGray,
+  marginTop: 50,
+},
+
+backButton: {
+  width: 40,
+  alignItems: 'flex-start',
+},
+
+headerTitleContainer: {
+  flex: 1,
+  alignItems: 'center',
+},
+
+headerTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: COLORS.dark,
+},
+
+rightPlaceholder: {
+  width: 40, // để cân xứng với backButton
+},
+
+
 });
 
 export default CheckOut;

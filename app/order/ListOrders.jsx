@@ -1,20 +1,36 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
 import React, { useEffect, useState, useCallback } from 'react';
 import { COLORS, SIZES } from '../../constants/theme';
 import { AntDesign } from '@expo/vector-icons';
 import FormatMoney from '@/components/FormatMoney';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useOrder } from '@/context/OrderContext';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable } from 'react-native';
+import {Stack} from 'expo-router';
 
 const ListOrders = () => {
-  const { orders, fetchOrder } = useOrder(); 
+  const { orders, fetchOrder } = useOrder();
   const [expandedOrders, setExpandedOrders] = useState({});
   const router = useRouter();
+
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     fetchOrder();
+  //   }, [fetchOrder])
+  // );
 
   useFocusEffect(
   useCallback(() => {
     fetchOrder();
-  }, [fetchOrder])
+  }, []) 
 );
 
 
@@ -27,19 +43,30 @@ const ListOrders = () => {
 
   const renderItem = ({ item }) => {
     const isExpanded = expandedOrders[item.orderId];
-    const displayedItems = isExpanded ? item.orderItem : item.orderItem.slice(0, 1);
+    const displayedItems = isExpanded
+      ? item.orderItem
+      : item.orderItem.slice(0, 1);
 
     return (
+      
       <TouchableOpacity
         onPress={() =>
-          router.push({ pathname: '/order/OrderDetail', params: { order: JSON.stringify(item) } })
+          router.push({
+            pathname: '/order/OrderDetail',
+            params: { order: JSON.stringify(item) },
+          })
         }
         style={styles.orderItem}
       >
         <View style={styles.orderHeaderRow}>
-          <Text style={styles.orderDate}>🗓 {new Date(item.createAt).toLocaleDateString()}</Text>
+          <Text style={styles.orderDate}>
+            🗓 {new Date(item.createAt).toLocaleDateString()}
+          </Text>
           <Text
-            style={[styles.orderStatus, item.payment.status === 'PAID' ? styles.paid : styles.unpaid]}
+            style={[
+              styles.orderStatus,
+              item.payment.status === 'PAID' ? styles.paid : styles.unpaid,
+            ]}
           >
             {item.payment.status}
           </Text>
@@ -55,9 +82,15 @@ const ListOrders = () => {
                   resizeMode="cover"
                 />
                 <View style={styles.productInfo}>
-                  <Text style={styles.orderItemTitle} numberOfLines={2}>{orderItem.book.title}</Text>
-                  <Text style={styles.orderItemQuantity}>Số lượng: {orderItem.quantity}</Text>
-                  <Text style={styles.orderItemPrice}>Đơn giá: {FormatMoney(orderItem.productPrice)}</Text>
+                  <Text style={styles.orderItemTitle} numberOfLines={2}>
+                    {orderItem.book.title}
+                  </Text>
+                  <Text style={styles.orderItemQuantity}>
+                    Số lượng: {orderItem.quantity}
+                  </Text>
+                  <Text style={styles.orderItemPrice}>
+                    Đơn giá: {FormatMoney(orderItem.productPrice)}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -65,15 +98,28 @@ const ListOrders = () => {
         </View>
 
         {item.orderItem.length > 1 && (
-          <TouchableOpacity onPress={() => toggleExpand(item.orderId)} style={styles.viewMoreBtn}>
-            <Text style={styles.viewMoreText}>{isExpanded ? 'Thu gọn' : `Xem thêm (${item.orderItem.length - 1})`}</Text>
-            <AntDesign name={isExpanded ? 'up' : 'down'} size={14} color={COLORS.primary} />
+          <TouchableOpacity
+            onPress={() => toggleExpand(item.orderId)}
+            style={styles.viewMoreBtn}
+          >
+            <Text style={styles.viewMoreText}>
+              {isExpanded
+                ? 'Thu gọn'
+                : `Xem thêm (${item.orderItem.length - 1})`}
+            </Text>
+            <AntDesign
+              name={isExpanded ? 'up' : 'down'}
+              size={14}
+              color={COLORS.primary}
+            />
           </TouchableOpacity>
         )}
 
         <View style={styles.totalContainer}>
           <Text style={styles.orderTotalLabel}>Thành tiền:</Text>
-          <Text style={styles.orderTotal}>{FormatMoney(item.payment.amount)}</Text>
+          <Text style={styles.orderTotal}>
+            {FormatMoney(item.payment.amount)}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -81,8 +127,23 @@ const ListOrders = () => {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen
+          options={{
+            title: 'Danh sách đơn hàng',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+              </Pressable>
+            ),
+        }}
+        />
+
+     
       <FlatList
-        data={[...orders].sort((a, b) => new Date(b.createAt) - new Date(a.createAt))}
+        data={[...orders].sort(
+          (a, b) => new Date(b.createAt) - new Date(a.createAt)
+        )}
         renderItem={renderItem}
         keyExtractor={(item) => item.orderId.toString()}
         contentContainerStyle={styles.orderList}
@@ -94,14 +155,37 @@ const ListOrders = () => {
       />
     </View>
   );
-  
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF3E0', 
-    padding: 10,
+    backgroundColor: '#FAF3E0',
+    paddingLeft: 10,
+    paddingRight: 10,
+    position: 'relative',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+ textHeader: {
+  fontSize: SIZES.large,
+  color: COLORS.primary,
+  position: 'absolute',
+  top: 50,                 
+  left: '50%',           
+  transform: [{ translateX: -80 }], 
+  textAlign: 'center',
+  fontWeight: '600',
+},
+
+  backText: {
+    fontSize: SIZES.medium,
+    color: COLORS.primary,
+    marginLeft: 6,
+    fontWeight: '500',
   },
   orderList: {
     paddingBottom: 20,
@@ -151,7 +235,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 90,
     borderRadius: 8,
-    backgroundColor: '#FCE4EC', // pastel pink
+    backgroundColor: '#FCE4EC',
   },
   productInfo: {
     flex: 1,
@@ -211,7 +295,37 @@ const styles = StyleSheet.create({
     fontSize: SIZES.medium,
     color: '#95a5a6',
     textAlign: 'center',
-  }
+  },
+  headerContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: 10,
+  backgroundColor: COLORS.white,
+  borderBottomWidth: 1,
+  borderBottomColor: COLORS.lightGray,
+},
+
+backButton: {
+  width: 40,
+  alignItems: 'flex-start',
+},
+
+headerTitleContainer: {
+  flex: 1,
+  alignItems: 'center',
+},
+
+headerTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: COLORS.dark,
+},
+
+rightPlaceholder: {
+  width: 40, 
+},
+
 });
 
 export default ListOrders;

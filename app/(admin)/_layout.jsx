@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { Redirect, Tabs } from "expo-router";
-import { Image, Text, View, TouchableOpacity, StyleSheet } from "react-native";
+import { Image, Text, View, TouchableOpacity, StyleSheet, Platform, StatusBar as RNStatusBar } from "react-native";
 import { icons } from "../../constants";
 import { Loader } from "../../components";
 import { useState, useEffect } from "react";
@@ -39,6 +39,9 @@ const TabLayout = () => {
 
   return (
     <>
+      {/* Custom background under translucent StatusBar */}
+      <View style={{ height: Platform.OS === 'android' ? RNStatusBar.currentHeight : 44, backgroundColor: '#161622' }} />
+
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: "#FFA001",
@@ -81,7 +84,7 @@ const TabLayout = () => {
           name="order"
           options={{
             title: "Quản lí đơn hàng",
-            headerShown: true,
+            headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                 icon={icons.cartpro}
@@ -104,8 +107,11 @@ const TabLayout = () => {
           }}
         />
       </Tabs>
+
       <Loader isLoading={loading} />
-      <StatusBar backgroundColor="#161622" style="light" />
+
+      {/* translucent + style="light" */}
+      <StatusBar translucent style="light" />
     </>
   );
 };

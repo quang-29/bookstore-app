@@ -33,7 +33,6 @@ const VerticalBookList = ({ books }) => {
   const handleAddToCart = async (bookId) => {
     try {
       await addToCart(bookId, 1);
-      Alert.alert("Thành công", "Đã thêm sách vào giỏ hàng!");
     } catch (error) {
       Alert.alert("Lỗi", "Không thể thêm sách vào giỏ hàng. Vui lòng thử lại sau.");
     }
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.lightGray || '#f5f5f5',
     borderRadius: 12,
     paddingVertical: 16,
-    marginVertical: 8,
+    // marginVertical: 8,
     flex: 1, // Ensures it takes available space
   },
   loadingContainer: {
@@ -134,7 +133,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 16,
   },
   title: {
     fontSize: 24,

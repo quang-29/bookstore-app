@@ -1,7 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import colors from '@/constants/colors';
-import { Star } from 'lucide-react-native';
+import { FontAwesome } from '@expo/vector-icons'; 
+import { Image } from 'react-native';
+
 
 export default function ReviewList({ reviews }) {
   const renderReviewItem = ({ item }) => (
@@ -9,27 +12,31 @@ export default function ReviewList({ reviews }) {
       <View style={styles.reviewHeader}>
         <View style={styles.userInfo}>
           <View style={styles.userAvatar}>
-            <Text style={styles.userInitial}>
-              {item.userName.charAt(0).toUpperCase()}
-            </Text>
+            {/* <Text style={styles.userInitial}>
+              {item.username?.charAt(0).toUpperCase() || '?'}
+            </Text> */}
+            <Image
+              source={{ uri: item.avatarUrl }}
+              style={styles.avatarImage}
+            />
           </View>
           <View>
-            <Text style={styles.userName}>{item.userName}</Text>
-            <Text style={styles.reviewDate}>{item.date}</Text>
+            <Text style={styles.userName}>{item.username}</Text>
+            <Text style={styles.reviewDate}>{item.createdAt}</Text>
           </View>
         </View>
         <View style={styles.ratingContainer}>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Star
-              key={star}
-              size={14}
-              color={colors.secondary}
-              fill={star <= item.rating ? colors.secondary : 'none'}
-            />
-          ))}
-        </View>
+  {[1, 2, 3, 4, 5].map((star) => (
+    <FontAwesome
+      key={star}
+      name={star <= item.ratePoint ? "star" : "star-o"} 
+      size={14}
+      color={colors.secondary}
+    />
+  ))}
+</View>
       </View>
-      <Text style={styles.reviewComment}>{item.comment}</Text>
+      <Text style={styles.reviewComment}>{item.content}</Text>
     </View>
   );
 
@@ -37,13 +44,17 @@ export default function ReviewList({ reviews }) {
     <View style={styles.container}>
       <Text style={styles.title}>Reviews ({reviews.length})</Text>
 
-      <FlatList
-        data={reviews}
-        keyExtractor={(item) => item.id}
-        renderItem={renderReviewItem}
-        scrollEnabled={false}
-        contentContainerStyle={styles.reviewsList}
-      />
+      {reviews.length === 0 ? (
+        <Text style={styles.noReviews}>Chưa có đánh giá nào cho sách này.</Text>
+      ) : (
+        <FlatList
+          data={reviews}
+          keyExtractor={(item) => item.reviewId}
+          renderItem={renderReviewItem}
+          scrollEnabled={false}
+          contentContainerStyle={styles.reviewsList}
+        />
+      )}
     </View>
   );
 }
@@ -57,6 +68,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginBottom: 16,
+  },
+  noReviews: {
+    fontSize: 14,
+    color: colors.textLight,
+    fontStyle: 'italic',
   },
   reviewsList: {
     gap: 16,
@@ -114,4 +130,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
   },
+  avatarImage: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  resizeMode: 'cover',
+},
+
 });

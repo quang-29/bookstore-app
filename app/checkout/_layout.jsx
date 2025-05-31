@@ -26,7 +26,7 @@ const CheckOutLayout = () => {
         name="ListAddress"
         options={{
           title: 'Danh sách địa chỉ',
-          headerShown: true,
+          headerShown: false,
         }}
       />
       <Stack.Screen

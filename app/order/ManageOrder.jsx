@@ -1,13 +1,17 @@
-import React from 'react';
+import {React,useCallback} from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import FormatMoney from '@/components/FormatMoney';
 import { COLORS, SIZES } from '@/constants/theme';
 import instance from '@/axios-instance';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useOrder } from '@/context/OrderContext';
+import { Ionicons } from '@expo/vector-icons';
+import { useEffect } from 'react';
 
 
-const OrderDetail = () => {
+const ManageOrder = () => {
+    const { orders, fetchOrder } = useOrder(); 
     const { order } = useLocalSearchParams();
     const orderData = JSON.parse(order);
     console.log('orderData', orderData);
@@ -15,6 +19,11 @@ const OrderDetail = () => {
 
     const shippingFee = 20000;
     const totalAmount = orderData.payment.amount + shippingFee;
+
+    useEffect(() => {
+        fetchOrder();
+        }, []);
+
 
     const formatToVietnamTime = (rawDate) => {
         const date = new Date(rawDate);
@@ -56,9 +65,76 @@ const OrderDetail = () => {
         );
     };
 
+    const handleTransitOrder = (orderId) => {
+
+        Alert.alert(
+            'Xác nhận vận chuyển đơn hàng',
+            'Bạn có chắc chắn muốn xác nhận vận chuyển đơn hàng này không?',
+            [
+                {
+                    text: 'Huỷ',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Xác nhận',
+                    onPress: async () => {
+                        try {
+                            const response = await instance.post(`/api/order/transitOrder/${orderId}`);
+                            console.log(response.data);
+                            Alert.alert('Thành công', 'Đơn hàng đã bắt đầu vận chuyển.');
+                            router.back();
+                        } catch (error) {
+                            console.error(error);
+                            Alert.alert('Lỗi', 'Không thể xác nhận đơn hàng. Vui lòng thử lại sau.');
+                        }
+                    },
+                },
+            ],
+            { cancelable: false }
+        );
+
+    };
+    const handleDeliveryOrder = (orderId) => {
+        Alert.alert(
+            'Xác nhận giao hàng thành công',
+            'Bạn có chắc chắn đã giao đơn hàng này không?',
+            [
+                {
+                    text: 'Huỷ',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Xác nhận',
+                    onPress: async () => {
+                        try {
+                            const response = await instance.post(`/api/order/deliveryOrder/${orderId}`);
+                            console.log(response.data);
+                            Alert.alert('Thành công', 'Đơn hàng đã được giao!');
+                            router.back();
+                        } catch (error) {
+                            console.error(error);
+                            Alert.alert('Lỗi', 'Không thể xác nhận đơn hàng. Vui lòng thử lại sau.');
+                        }
+                    },
+                },
+            ],
+            { cancelable: false }
+        );
+    };
 
     return (
         <SafeAreaView style={styles.safeArea}>
+
+            <View style={styles.headerContainer}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+                </TouchableOpacity>
+
+                <View style={styles.headerTitleContainer}>
+                <Text style={styles.headerTitle}>Chi tiết đơn hàng</Text>
+                </View>
+                <View style={styles.rightPlaceholder} />
+            </View>
             <ScrollView style={styles.container}>
                 {/* Ngày giao hàng */}
                 <View style={styles.orderInfo}>
@@ -157,14 +233,58 @@ const OrderDetail = () => {
 
             {/* Hành động - Fixed ở cuối màn hình */}
             <View style={styles.footer}>
-                <TouchableOpacity
-                    style={[styles.actionButton, styles.contactButton]}
-                    onPress={() => handleConfirmOrder(orderData.orderId)}
-                >
-                    <Text style={styles.actionText}>Xác nhận đơn hàng</Text>
-                </TouchableOpacity>
+                {(() => {
+                    const status = orderData.payment.status;
 
+                    if (status === 'PENDING' || status === 'COD' || status === 'COMPLETED') {
+                        return (
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.contactButton]}
+                                onPress={() => handleConfirmOrder(orderData.orderId)}
+                            >
+                                <Text style={styles.actionText}>Xác nhận đơn hàng</Text>
+                            </TouchableOpacity>
+                        );
+                    }
+
+                    if (status === 'CONFIRMED') {
+                        return (
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.contactButton]}
+                                onPress={() => handleTransitOrder(orderData.orderId)}
+                            >
+                                <Text style={styles.actionText}>Xác nhận bắt đầu vận chuyển đơn hàng</Text>
+                            </TouchableOpacity>
+                        );
+                    }
+
+                    if (status === 'IN_TRANSIT') {
+                        return (
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.contactButton]}
+                                onPress={() => handleDeliveryOrder(orderData.orderId)}
+                            >
+                                <Text style={styles.actionText}>Xác nhận đã giao hàng</Text>
+                            </TouchableOpacity>
+                        );
+                    }
+
+                    if (status === 'CANCELLED') {
+                        return (
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.contactButton]}
+                                disabled={true}
+                            >
+                                <Text style={styles.actionText}>Đơn hàng đã bị hủy</Text>
+                            </TouchableOpacity>
+                        );
+                    }
+
+                    // Trạng thái không hành động
+                    return null;
+                })()}
             </View>
+
         </SafeAreaView>
     );
 };
@@ -309,6 +429,35 @@ const styles = StyleSheet.create({
         fontSize: SIZES.medium,
         fontWeight: '600',
     },
+    headerContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: 10,
+  backgroundColor: COLORS.white,
+  borderBottomWidth: 1,
+  borderBottomColor: COLORS.lightGray,
+},
+
+backButton: {
+  width: 40,
+  alignItems: 'flex-start',
+},
+
+headerTitleContainer: {
+  flex: 1,
+  alignItems: 'center',
+},
+
+headerTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: COLORS.dark,
+},
+
+rightPlaceholder: {
+  width: 40, 
+},
 });
 
-export default OrderDetail;
+export default ManageOrder;

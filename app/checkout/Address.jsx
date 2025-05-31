@@ -125,6 +125,7 @@ const AddressScreen = () => {
                     placeholder="Họ và tên"
                     value={name}
                     onChangeText={setName}
+                    placeholderTextColor="#999"
                 />
 
                 <TextInput
@@ -133,6 +134,7 @@ const AddressScreen = () => {
                     value={phone}
                     onChangeText={setPhone}
                     keyboardType="phone-pad"
+                    placeholderTextColor="#999"
                 />
 
                 <DropDownPicker
@@ -186,19 +188,8 @@ const AddressScreen = () => {
                     placeholder="Số nhà, tên đường"
                     value={detailAddress}
                     onChangeText={setDetailAddress}
+                    placeholderTextColor="#999"
                 />
-
-                {/* <TouchableOpacity
-                    style={[styles.defaultButton, isPrimary && styles.defaultButtonActive]}
-                    onPress={() => {
-                        setIsPrimary(!isPrimary);
-                        console.log(!isPrimary);
-                    }}
-                >
-                    <Text style={[styles.defaultButtonText, isPrimary && styles.defaultButtonTextActive]}>
-                        {isPrimary ? '✓ Mặc định' : 'Đặt làm mặc định'}
-                    </Text>
-                </TouchableOpacity> */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                     <Text style={{ flex: 1, fontSize: 16 }}>Đặt làm địa chỉ mặc định</Text>
                     <Switch
@@ -228,12 +219,13 @@ const styles = StyleSheet.create({
         flexGrow: 1,
     },
     input: {
-        height: 50,
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        marginBottom: 12,
+    height: 50,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    color: 'black', 
     },
     dropdown: {
         marginBottom: 12,

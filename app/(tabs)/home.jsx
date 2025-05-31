@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -6,7 +7,8 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  RefreshControl
+  RefreshControl,
+  TouchableOpacity,
 } from "react-native";
 import { COLORS, SIZES } from "../../constants/theme";
 import colors from "@/constants/colors";
@@ -18,13 +20,17 @@ import Category from "../../components/Category";
 import BookList from "../../components/BookList";
 import Loader from "@/components/Loader";
 
+import { useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons";
+
 const Home = () => {
   const [query, setQuery] = useState("");
   const [bestSellers, setBestSellers] = useState([]);
-  const [loading, setLoading] = useState(true); // loader toàn màn
-  const [refreshing, setRefreshing] = useState(false); // kiểm soát kéo xuống
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // HÀM FETCH DÙNG CHUNG
+  const router = useRouter();
+
   const fetchBestSellers = async () => {
     try {
       setLoading(true);
@@ -39,19 +45,17 @@ const Home = () => {
       Alert.alert("Lỗi", "Không thể tải danh sách Best Sellers");
     } finally {
       setLoading(false);
-      setRefreshing(false); // khi kéo xuống xong thì dừng refresh
+      setRefreshing(false);
     }
   };
 
-  // GỌI KHI LOAD LẦN ĐẦU
   useEffect(() => {
     fetchBestSellers();
   }, []);
 
-  // HÀM GỌI KHI KÉO XUỐNG
   const onRefresh = () => {
-    setRefreshing(true);  // để RefreshControl biết là đang refresh
-    fetchBestSellers();   // loader sẽ hiển thị
+    setRefreshing(true);
+    fetchBestSellers();
   };
 
   return (
@@ -70,8 +74,16 @@ const Home = () => {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.greeting}>Find Books</Text>
-          <Text style={styles.subtitle}>Find your place you belong</Text>
+          <View style={styles.headerTopRow}>
+            <View>
+              <Text style={styles.greeting}>Find Books</Text>
+              <Text style={styles.subtitle}>Find your place you belong</Text>
+            </View>
+
+            <TouchableOpacity onPress={() => router.push("/chat")}>
+              <Feather name="message-circle" size={24} color={colors.text} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <SearchBar />
@@ -99,6 +111,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  headerTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   greeting: {
     fontSize: 24,

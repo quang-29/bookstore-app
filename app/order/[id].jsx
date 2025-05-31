@@ -1,17 +1,21 @@
 import {React, useState} from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams,Stack } from 'expo-router';
 import FormatMoney from '@/components/FormatMoney';
 import { COLORS, SIZES } from '@/constants/theme';
 import instance from '@/axios-instance';
 import { Alert } from 'react-native';
 import Loader from '@/components/Loader';
+import { Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import ListOrders from './ListOrders';
 
 
 const OrderDetail = () => {
   const { order } = useLocalSearchParams();
   const orderData = JSON.parse(order);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const shippingFee = 20000;
   const totalAmount = orderData.payment.amount + shippingFee;
@@ -27,26 +31,62 @@ const OrderDetail = () => {
       minute: '2-digit',
     });
   };
-  const handleCancelOrder = async () => {
-    setIsLoading(true);
-    try {
-      const response = await instance.post(`/api/order/cancelOrder?orderId=${orderData.orderId}`);
+  const handleCancelOrder = () => {
+  Alert.alert(
+    'Xác nhận',
+    'Bạn có chắc muốn huỷ đơn hàng không?',
+    [
+      {
+        text: 'Không',
+        style: 'cancel',
+      },
+      {
+        text: 'Có',
+        onPress: async () => {
+          setIsLoading(true);
+          try {
+            const response = await instance.post(`/api/order/cancelOrder?orderId=${orderData.orderId}`);
+            if (response.status === 200) {
+              Alert.alert('Huỷ đơn hàng', 'Đơn hàng đã được huỷ thành công.');
+              router.replace('/order/ListOrders');
+            } else {
+              Alert.alert('Lỗi', 'Không thể huỷ đơn hàng. Vui lòng thử lại.');
+            }
+          } catch (error) {
+            Alert.alert('Lỗi', 'Đã xảy ra lỗi khi huỷ đơn hàng.');
+          } finally {
+            setIsLoading(false);
+          }
+        },
+      },
+    ],
+    { cancelable: true }
+  );
+};
+    const handleRatingBook = (orderData) => {
+      router.push({
+        pathname: '/rating/UnrateBook',
+        params: {
+          orderId: orderData.orderId,
+        },
+      });
+    };
 
-      if (response.status === 200) {
-        Alert.alert('Huỷ đơn hàng', 'Đơn hàng đã được huỷ thành công.');
-      } else {
-        Alert.alert('Lỗi', 'Không thể huỷ đơn hàng. Vui lòng thử lại.');
-      }
-    } catch (error) {
-      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi huỷ đơn hàng.');
-    } finally{
-      setIsLoading(false);
-    }
-  };
 
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <Stack.Screen
+          options={{
+            title: 'Chi tiết đơn hàng',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+              </Pressable>
+            ),
+        }}
+      />
       <ScrollView style={styles.container}>
         {/* Ngày giao hàng */}
         <View style={styles.orderInfo}>
@@ -136,12 +176,10 @@ const OrderDetail = () => {
           </Text>
           <Text style={styles.infoText} >Thời gian đặt hàng: <Text style={styles.bold} >{formatToVietnamTime(orderData.createAt)}</Text></Text>
         </View>
-
-        {/* Thêm padding bottom để tránh bị che bởi các nút fixed */}
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Hành động - Fixed ở cuối màn hình */}
+     
       <View style={styles.footer}>
         {(orderData.payment.status === 'PENDING' || orderData.payment.status === 'COD') && (
           <TouchableOpacity
@@ -152,7 +190,18 @@ const OrderDetail = () => {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={[styles.actionButton, styles.contactButton]}>
+        {orderData.payment.status === 'DELIVERED' && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.contactButton]}
+              onPress={() => handleRatingBook(orderData)}
+            >
+              <Text style={styles.actionText}>Đánh giá sản phẩm</Text>
+            </TouchableOpacity>
+          )}
+
+
+
+        <TouchableOpacity style={[styles.actionButton, styles.contactButton]} onPress={() => router.replace('/(tabs)/chat')}>
           <Text style={styles.actionText}>Liên hệ shop</Text>
         </TouchableOpacity>
       </View>

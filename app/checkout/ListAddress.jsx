@@ -8,6 +8,8 @@ import { getUser, getToken } from '@/storage';
 import { IP_CONFIG } from '@/config/ipconfig';
 import { useAddress } from '@/context/AddressContext';
 import { useAuth } from '@/context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../../constants/theme';
 
 const ListAddress = () => {
   const [addresses, setAddresses] = useState([]);
@@ -104,8 +106,22 @@ const ListAddress = () => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+        </TouchableOpacity>
+
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>Danh sách địa chỉ</Text>
+        </View>
+        <View style={styles.rightPlaceholder} />
+      </View>
       {addresses.length === 0 ? (
-        <Text style={styles.title}>Bạn chưa thiết lập địa chỉ nhận hàng nào</Text>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Ionicons name="location-outline" size={64} color="#bdc3c7" style={{ alignSelf: 'center'}} />
+           <Text>Bạn chưa thiết lập địa chỉ nhận hàng nào</Text>
+        </View>
+       
       ) : (
         <FlatList
           data={addresses}
@@ -132,7 +148,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f9fafb',
     paddingHorizontal: 16,
-    paddingTop: 16,
   },
   title: {
     fontSize: 18,
@@ -229,4 +244,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  headerContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: 10,
+  backgroundColor: COLORS.white,
+  borderBottomWidth: 1,
+  borderBottomColor: COLORS.lightGray,
+  marginTop: 50,
+},
+
+backButton: {
+  width: 40,
+  alignItems: 'flex-start',
+},
+
+headerTitleContainer: {
+  flex: 1,
+  alignItems: 'center',
+},
+
+headerTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: COLORS.dark,
+},
+
+rightPlaceholder: {
+  width: 40, // để cân xứng với backButton
+},
 });

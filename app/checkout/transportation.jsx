@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { COLORS, SIZES } from '../../constants';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useRouter,Stack } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
+import { Pressable } from 'react-native';
 
 const Transportation = () => {
   const [selectedMethod, setSelectedMethod] = useState('express');
   const { fee, deliveryDate } = useLocalSearchParams();
+  const router = useRouter();
   
   const parseDeliveryDate = (dateStr) => {
     const [day, month, year] = dateStr.split('/');
@@ -38,12 +40,17 @@ const Transportation = () => {
 
   return (
     <View style={styles.container}>
-      {/* <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={20} color={COLORS.dark} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Phương thức vận chuyển</Text>
-      </View> */}
+      <Stack.Screen
+          options={{
+            title: 'Phương thức vận chuyển',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+              </Pressable>
+            ),
+        }}
+        />
 
       <ScrollView style={styles.content}>
         {shippingMethods.map((method) => (

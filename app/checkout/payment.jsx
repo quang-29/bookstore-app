@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { COLORS, SIZES } from '../../constants';
 import { Ionicons } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { usePayment } from '../../context/PaymentContext'; // Import PaymentContext hook
-
+import { useRouter,Stack, useLocalSearchParams } from 'expo-router';
+import { usePayment } from '../../context/PaymentContext';
+import { Pressable } from 'react-native';
 const Payment = () => {
   const { updateSelectedPaymentMethod, selectedPaymentMethod: contextPaymentMethod } = usePayment();
   const { selectedPaymentMethod: paramPaymentMethod } = useLocalSearchParams();
-  const selected = contextPaymentMethod; // Use context for selected method
+  const selected = contextPaymentMethod; 
+  const router = useRouter();
 
   const paymentMethods = [
     {
@@ -33,13 +34,25 @@ const Payment = () => {
 
   return (
     <View style={styles.container}>
+
+      <Stack.Screen
+          options={{
+            title: 'Phương thức thanh toán',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+              </Pressable>
+            ),
+        }}
+        />
       <ScrollView style={styles.content}>
         {paymentMethods.map((method) => (
           <TouchableOpacity
             key={method.id}
             style={[
               styles.methodCard,
-              selected?.id === method.id && styles.selectedMethod // Use optional chaining
+              selected?.id === method.id && styles.selectedMethod 
             ]}
             onPress={() => handleSelectMethod(method)}
           >

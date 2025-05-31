@@ -8,7 +8,8 @@ import { AuthProvider } from "../context/AuthContext";
 import { AddressProvider } from "../context/AddressContext";
 import {PaymentProvider} from "../context/PaymentContext";
 import {OrderProvider} from "../context/OrderContext"
-import DeeplinkHandler from "../app/deeplink/DeeplinkHandler"
+import DeeplinkHandler from "../app/deeplink/DeeplinkHandler";
+import {RatedBooksProvider} from "../context/RateBookContext";
 
 const RootLayout = () => {
   const [fontsLoaded, error] = useFonts({
@@ -43,6 +44,7 @@ const RootLayout = () => {
         <AddressProvider>
           <PaymentProvider>
             <OrderProvider>
+              <RatedBooksProvider>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -55,7 +57,11 @@ const RootLayout = () => {
               <Stack.Screen name="address" options={{ headerShown: false }} />
               <Stack.Screen name="order" options={{headerShown: false}} />
               <Stack.Screen name="wishlist" options={{headerShown: false}} />
+              <Stack.Screen name="settings" options={{ headerShown: false }} />
+              <Stack.Screen name="rating" options={{ headerShown: false }} />
+              <Stack.Screen name="chat" options={{headerShown:false}} />
             </Stack>
+            </RatedBooksProvider>
             </OrderProvider>
           </PaymentProvider>
         </AddressProvider>

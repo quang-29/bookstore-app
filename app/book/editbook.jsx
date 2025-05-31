@@ -8,14 +8,20 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import instance from '@/axios-instance';
 import Loader from '@/components/Loader';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Pressable } from 'react-native';
+import {Stack} from 'expo-router';
+import { COLORS } from '@/constants';
 
 const EditBookScreen = () => {
   const { bookId } = useLocalSearchParams();
   const [book, setBook] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -62,7 +68,18 @@ const EditBookScreen = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>Chỉnh sửa sách</Text>
+      <Stack.Screen
+        options={{
+          title: 'Thay đổi thông tin sách',
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+            </Pressable>
+          ),
+        }}
+      />
+ 
 
       {[
         ['Tiêu đề', 'title'],

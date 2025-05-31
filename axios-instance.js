@@ -3,8 +3,8 @@ import axios from 'axios';
 import { clearStorage, getToken, removeToken } from './storage'; // Assuming you have a function to remove token
 import { router, useNavigation } from 'expo-router';
 const instance = axios.create({
-  baseURL: 'http://172.20.10.2:8080',
-  timeout: 5000,
+  baseURL: 'http://192.168.1.2:8080',
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },

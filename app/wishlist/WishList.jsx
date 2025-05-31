@@ -8,9 +8,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter,Stack } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { COLORS } from '@/constants';
 import FormatMoney from '@/components/FormatMoney';
 import { useFavorite } from '../../context/FavoriteContext';
 import instance from '@/axios-instance';
@@ -18,6 +17,11 @@ import { useAuth } from '@/context/AuthContext';
 import VerticalBookList from '@/components/VerticalBookList';
 import BackButton from '@/components/BackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { COLORS, SIZES } from '../../constants/theme';
+import { AntDesign } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable } from 'react-native';
+
 
 const Wishlist = () => {
   const [loading, setLoading] = useState(true);
@@ -30,7 +34,7 @@ const Wishlist = () => {
       try {
         const response = await instance.get('/api/user/listBooksLikedByUser', {
           params: { userId: user.userId }
-      });
+        });
         setFavoriteBooks(response.data.data);
       } catch (error) {
         console.error('Error fetching favorite books:', error);
@@ -83,31 +87,66 @@ const Wishlist = () => {
 
   if (favoriteBooks.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <MaterialIcons name="favorite-border" size={64} color={COLORS.gray} />
-        <Text style={styles.emptyText}>Bạn chưa có sách yêu thích nào</Text>
+      <View style={styles.container}>
+        <Stack.Screen
+          options={{
+            title: 'Danh sách sách yêu thích',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+              </Pressable>
+            ),
+        }}
+      />
+        <View style={styles.emptyContainer}>
+          <MaterialIcons name="favorite-border" size={64} color={COLORS.gray} />
+          <Text style={styles.emptyText}>Bạn chưa có sách yêu thích nào</Text>
+        </View>
+        
       </View>
     );
   }
 
   return (
-            <VerticalBookList books={favoriteBooks} /> 
+    <View style={styles.container}>
+        <Stack.Screen
+          options={{
+            title: 'Danh sách sách yêu thích',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+              </Pressable>
+            ),
+        }}
+      />
+      <View style={styles.content}>
+        <VerticalBookList books={favoriteBooks} />
+      </View>
+    </View>
   );
+
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.backgroundColor,
-    padding: 16,
+    // padding: 16,
+  },
+   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   maincontainer: {
-      flex: 1,
-      backgroundColor: '#fff',
+    flex: 1,
+    backgroundColor: '#fff',
   },
   content: {
     flex: 1,
-    paddingTop: 8,
+    // paddingTop: 8,
   },
   loadingContainer: {
     flex: 1,
@@ -118,12 +157,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    // padding: 20,
   },
   emptyText: {
     fontSize: 16,
     color: COLORS.gray,
-    marginTop: 16,
     textAlign: 'center',
   },
   listContent: {
@@ -194,15 +232,13 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     backgroundColor: '#fff',
   },
-  backButton: {
-    marginRight: 16,
-  },
   title: {
     fontSize: 18,
     fontWeight: '600',
     color: '#000',
     flex: 1,
   },
+
 });
 
 export default Wishlist; 

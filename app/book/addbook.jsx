@@ -13,11 +13,14 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { COLORS } from '../../constants/theme';
 import instance from '@/axios-instance';
-import Loader from '@/components/Loader'; // ✅ Đảm bảo đường dẫn đúng
+import Loader from '@/components/Loader'; 
+import { Stack, useRouter } from 'expo-router';
+import { Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const AddBookScreen = () => {
   const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(false); // ✅ loader state
+  const [isLoading, setIsLoading] = useState(false); 
   const [book, setBook] = useState({
     title: '',
     authorId: '',
@@ -34,6 +37,7 @@ const AddBookScreen = () => {
     imagePath: '',
     publishedDate: '',
   });
+  const router = useRouter();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -57,7 +61,7 @@ const AddBookScreen = () => {
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true); // ✅ bật loader
+    setIsLoading(true); 
     try {
       await instance.post('/api/book/addBook', {
         ...book,
@@ -100,12 +104,22 @@ const AddBookScreen = () => {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+        <Stack.Screen
+          options={{
+            title: 'Thêm sách mới',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+              </Pressable>
+            ),
+        }}
+      />
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.heading}>Thêm Sách Mới</Text>
 
         {[
           ['Tiêu đề', 'title'],

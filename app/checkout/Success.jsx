@@ -27,7 +27,10 @@ const Success = () => {
             <Text style={styles.buttonText}>Trang chủ</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button} onPress={() => router.push('/order/ListOrders')}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.replace('/order/ListOrders')}
+          >
             <Text style={styles.buttonText}>Đơn mua</Text>
           </TouchableOpacity>
         </View>
@@ -44,7 +47,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F4F4', // ✅ nền xám sáng nhẹ
     justifyContent: 'center',
     alignItems: 'center',
-  },  
+  },
   box: {
     backgroundColor: '#FFFFFF',
     padding: 24,
@@ -73,7 +76,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 30,
   },
-  
+
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -90,5 +93,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
-  
+
 });

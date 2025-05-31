@@ -1,33 +1,31 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Search, X } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 import colors from '../constants/colors';
 
-
-
 export default function SearchBar({ autoFocus = false }) {
-//   const router = useRouter();
-// //   const { searchBooks, searchQuery, resetSearch } = useBookStore();
-  const [query, setQuery] = useState("");
-  
+  // const router = useRouter();
+  // const { searchBooks, searchQuery, resetSearch } = useBookStore();
+  const [query, setQuery] = useState('');
+
   const handleSearch = () => {
     // if (query.trim()) {
     //   searchBooks(query);
     //   router.push('/search');
     // }
   };
-  
+
   const handleClear = () => {
     // setQuery('');
     // resetSearch();
   };
-  
+
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
-        <Search size={20} color={colors.gray[400]} style={styles.searchIcon} />
-        
+        <Feather name="search" size={20} color={colors.gray[400]} style={styles.searchIcon} />
+
         <TextInput
           style={styles.input}
           placeholder="Search books, authors..."
@@ -38,10 +36,10 @@ export default function SearchBar({ autoFocus = false }) {
           returnKeyType="search"
           autoFocus={autoFocus}
         />
-        
+
         {query.length > 0 && (
           <Pressable onPress={handleClear} style={styles.clearButton}>
-            <X size={18} color={colors.gray[400]} />
+            <Feather name="x" size={18} color={colors.gray[400]} />
           </Pressable>
         )}
       </View>
@@ -51,7 +49,6 @@ export default function SearchBar({ autoFocus = false }) {
 
 const styles = StyleSheet.create({
   container: {
-    // paddingHorizontal: 16,
     paddingVertical: 8,
   },
   searchContainer: {

@@ -11,75 +11,19 @@ import {
   Animated
 } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import Button from '@/components/Button';
 import colors from '@/constants/colors';
-import BackButton from '@/components/BackButton';
 import instance from '@/axios-instance';
 import FormatMoney from '@/components/FormatMoney';
-import { getUser } from '@/storage';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import {
-  Star,
-  ShoppingCart,
-  Heart,
-  Share,
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  Book,
-  Type,
-  Languages
-} from 'lucide-react-native';
 import ReviewList from '@/components/ReviewList';
-import { addToCart } from '../../context/CartContext';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '@/constants';
 
-const specificReviews = [
-  {
-    id: '1',
-    userName: 'Nguyễn Văn A',
-    date: '2024-07-20',
-    rating: 5,
-    comment: 'Một cuốn sách tuyệt vời! Nội dung sâu sắc và cách viết lôi cuốn. Tôi đã đọc nó một mạch không rời.',
-  },
-  {
-    id: '2',
-    userName: 'Trần Thị B',
-    date: '2024-08-05',
-    rating: 4,
-    comment: 'Cuốn sách khá hay, cốt truyện hấp dẫn. Tuy nhiên, một vài chi tiết ở giữa có vẻ hơi chậm.',
-  },
-  {
-    id: '3',
-    userName: 'Lê Công C',
-    date: '2024-08-15',
-    rating: 3,
-    comment: 'Đây là một cuốn sách thú vị, nhưng không thực sự xuất sắc như tôi mong đợi. Ý tưởng tốt nhưng triển khai chưa tới.',
-  },
-  {
-    id: '4',
-    userName: 'Phạm Thu D',
-    date: '2024-09-01',
-    rating: 5,
-    comment: 'Tôi hoàn toàn yêu thích cuốn sách này! Các nhân vật được xây dựng rất tốt và thông điệp ý nghĩa. Chắc chắn sẽ đọc lại.',
-  },
-  {
-    id: '5',
-    userName: 'Hoàng Minh E',
-    date: '2024-09-10',
-    rating: 2,
-    comment: 'Khá thất vọng với cuốn sách này. Cốt truyện rời rạc và khó theo dõi. Có lẽ không phù hợp với gu của tôi.',
-  },
-  {
-    id: '6',
-    userName: 'Vũ Ngọc F',
-    date: '2024-09-25',
-    rating: 4,
-    comment: 'Một câu chuyện cảm động và đầy ý nghĩa nhân văn. Tác giả viết rất chân thật và dễ đồng cảm.',
-  },
-];
 
-const SkeletonLoader = () => {
+const SkeletonLoader = ({ reviews }) => {
   const [opacity] = useState(new Animated.Value(0.3));
 
   useEffect(() => {
@@ -112,39 +56,7 @@ const SkeletonLoader = () => {
           <Animated.View style={[styles.skeletonPrice, { opacity }]} />
         </View>
       </View>
-
-      <View style={styles.section}>
-        <Animated.View style={[styles.skeletonSectionTitle, { opacity }]} />
-        <Animated.View style={[styles.skeletonDescription, { opacity }]} />
-        <Animated.View style={[styles.skeletonDescription, { opacity }]} />
-        <Animated.View style={[styles.skeletonDescription, { opacity }]} />
-      </View>
-
-      <View style={styles.section}>
-        <Animated.View style={[styles.skeletonSectionTitle, { opacity }]} />
-        <View style={styles.detailsGrid}>
-          {[1, 2, 3, 4].map((item) => (
-            <View key={item} style={styles.detailItem}>
-              <Animated.View style={[styles.skeletonDetailIcon, { opacity }]} />
-              <View>
-                <Animated.View style={[styles.skeletonDetailLabel, { opacity }]} />
-                <Animated.View style={[styles.skeletonDetailValue, { opacity }]} />
-              </View>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Animated.View style={[styles.skeletonSectionTitle, { opacity }]} />
-        <View style={styles.categories}>
-          {[1, 2, 3].map((item) => (
-            <Animated.View key={item} style={[styles.skeletonCategory, { opacity }]} />
-          ))}
-        </View>
-      </View>
-
-      <ReviewList reviews={specificReviews} />
+      <ReviewList reviews={reviews} />
     </ScrollView>
   );
 };
@@ -157,10 +69,17 @@ export default function BookDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
   const { user } = useAuth();
-  const {addToCart} = useCart();
+  const { addToCart } = useCart();
+  const [specificReviews, setSpecificReviews] = useState([]);
+
+  const extractCategory = (category) => {
+    if (!category) return [];
+    const parts = category.split(/ - |,|\//); 
+    return parts.map((part) => part.trim());
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAll = async () => {
       try {
         const res = await instance.get(`/api/book/${id}`);
         setBook(res.data.data);
@@ -172,86 +91,31 @@ export default function BookDetailScreen() {
           const likedBooks = likeResponse.data.data.map(item => item.bookId);
           setIsLiked(likedBooks.includes(res.data.data.id));
         }
+
+        const reviewResponse = await instance.get(`/api/review/getReviewByBookId/${id}`);
+        setSpecificReviews(reviewResponse.data.data);
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchAll();
   }, [id, user]);
 
-  const extractCategory = (category) => {
-    if (!category) return [];
-    const parts = category.split(/ - |,|\//);
-    return parts.map((part) => part.trim());
-  };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Stack.Screen
-          options={{
-            title: '',
-            headerRight: () => (
-              <View style={styles.headerActions}>
-                <Pressable style={styles.headerButton}>
-                  <Heart size={24} color={colors.text} />
-                </Pressable>
-                <Pressable style={styles.headerButton}>
-                  <Share size={24} color={colors.text} />
-                </Pressable>
-              </View>
-            ),
-          }}
-        />
-        <SkeletonLoader />
-        <View style={styles.footer}>
-          <Button
-            title="Add to Cart"
-            leftIcon={<ShoppingCart size={20} color={colors.white} />}
-            onPress={() => {}}
-            style={styles.addToCartButton}
-            rightIcon={null}
-            textStyle={{ color: colors.white }}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!book) {
-    return (
-      <View style={styles.notFound}>
-        <Text style={styles.notFoundText}>Book not found</Text>
-        <Button
-          title="Go Back"
-          onPress={() => router.back()}
-          style={styles.backButton}
-          textStyle={{ color: colors.white }}
-          leftIcon={null}
-          rightIcon={null}
-        />
-      </View>
-    );
-  }
-
-  const inWishlist = false;
-
   const handleAddToCart = async (bookId) => {
-    addToCart(bookId,1);
+    addToCart(bookId, 1);
   };
 
   const handleLikeBook = async () => {
-    if (!user?.id) {
+    if (!user?.userId) {
       Alert.alert("Thông báo", "Vui lòng đăng nhập để thực hiện chức năng này");
       return;
     }
-
     try {
       const response = await instance.post('/api/user/likeBook', {
-        userId: user.id,
+        userId: user.userId,
         bookId: book.id,
       });
 
@@ -274,25 +138,32 @@ export default function BookDetailScreen() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          title: '',
-          headerRight: () => (
-            <View style={styles.headerActions}>
-              <Pressable style={styles.headerButton} onPress={handleLikeBook}>
-                <Heart
-                  size={24}
-                  color={isLiked ? colors.error : colors.text}
-                  fill={isLiked ? colors.error : 'none'}
-                />
-              </Pressable>
-              <Pressable style={styles.headerButton}>
-                <Share size={24} color={colors.text} />
-              </Pressable>
-            </View>
+          title: 'Chi tiết sách',
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+            </Pressable>
           ),
         }}
       />
 
-      <ScrollView contentContainerStyle={styles.content}>
+      {loading ? (
+        <>
+          <SkeletonLoader reviews={specificReviews} />
+          <View style={styles.footer}>
+            <Button
+              title="Add to Cart"
+              leftIcon={<Feather name="shopping-cart" size={20} color={colors.white} />}
+              onPress={() => {}}
+              style={styles.addToCartButton}
+              textStyle={{ color: colors.white }}
+            />
+          </View>
+        </>
+      ) : book ? (
+        <>
+          <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.bookHeader}>
           <Image
             source={{ uri: book.imagePath }}
@@ -305,7 +176,7 @@ export default function BookDetailScreen() {
             <Text style={styles.author}>by {book.author}</Text>
 
             <View style={styles.ratingContainer}>
-              <Star size={16} color={colors.secondary} fill={colors.secondary} />
+              <Feather name="star" size={16} color={colors.secondary} />
               <Text style={styles.rating}>
                 {book.averageRating ? book.averageRating.toFixed(1) : '0'} ({book.stock} remains)
               </Text>
@@ -344,11 +215,11 @@ export default function BookDetailScreen() {
               <Text style={styles.expandText}>
                 {expanded ? 'Show Less' : 'Read More'}
               </Text>
-              {expanded ? (
-                <ChevronUp size={16} color={colors.primary} />
-              ) : (
-                <ChevronDown size={16} color={colors.primary} />
-              )}
+              <Feather
+                name={expanded ? "chevron-up" : "chevron-down"}
+                size={16}
+                color={colors.primary}
+              />
             </Pressable>
           )}
         </View>
@@ -359,7 +230,7 @@ export default function BookDetailScreen() {
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
               <View style={styles.detailIcon}>
-                <Book size={16} color={colors.primary} />
+                <Feather name="book" size={16} color={colors.primary} />
               </View>
               <View>
                 <Text style={styles.detailLabel}>ISBN</Text>
@@ -369,7 +240,7 @@ export default function BookDetailScreen() {
 
             <View style={styles.detailItem}>
               <View style={styles.detailIcon}>
-                <Calendar size={16} color={colors.primary} />
+                <Feather name="calendar" size={16} color={colors.primary} />
               </View>
               <View>
                 <Text style={styles.detailLabel}>Published</Text>
@@ -379,7 +250,7 @@ export default function BookDetailScreen() {
 
             <View style={styles.detailItem}>
               <View style={styles.detailIcon}>
-                <Type size={16} color={colors.primary} />
+                <Feather name="type" size={16} color={colors.primary} />
               </View>
               <View>
                 <Text style={styles.detailLabel}>Page</Text>
@@ -389,7 +260,7 @@ export default function BookDetailScreen() {
 
             <View style={styles.detailItem}>
               <View style={styles.detailIcon}>
-                <Languages size={16} color={colors.primary} />
+                <Feather name="globe" size={16} color={colors.primary} />
               </View>
               <View>
                 <Text style={styles.detailLabel}>Language</Text>
@@ -410,31 +281,101 @@ export default function BookDetailScreen() {
           </View>
         </View>
 
-        {/* Hiển thị danh sách review cụ thể */}
         <ReviewList reviews={specificReviews} />
-
-        {/* Đoạn code cũ để hiển thị review từ API (bạn có thể bỏ comment nếu muốn hiển thị cả hai hoặc chỉ review từ API khi có) */}
-        {/* {book.reviews && book.reviews.length > 0 && (
-          <ReviewList reviews={book.reviews} />
-        )} */}
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Button
-          title="Add to Cart"
-          leftIcon={<ShoppingCart size={20} color={colors.white} />}
-          onPress={() => handleAddToCart(id)}
-          style={styles.addToCartButton}
-          rightIcon={null}
-          textStyle={{ color: colors.white }}
-        />
-      </View>
+          </ScrollView>
+          <View style={styles.footer}>
+            <Button
+              title="Add to Cart"
+              leftIcon={<Feather name="shopping-cart" size={20} color={colors.white} />}
+              onPress={() => handleAddToCart(id)}
+              style={styles.addToCartButton}
+              textStyle={{ color: colors.white }}
+            />
+          </View>
+        </>
+      ) : (
+        <View style={styles.notFound}>
+          <Text style={styles.notFoundText}>Book not found</Text>
+          <Button
+            title="Go Back"
+            onPress={() => router.back()}
+            style={styles.backButton}
+            textStyle={{ color: colors.white }}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    padding: 16,
+  },
+  headerActions: {
+    flexDirection: 'row',
+  },
+  headerButton: {
+    padding: 8,
+    marginLeft: 8,
+  },
+  footer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray[200],
+    backgroundColor: colors.white,
+  },
+  addToCartButton: {
+    width: '100%',
+  },
+  notFound: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24
+  },
+  notFoundText: {
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  skeletonImage: {
+    width: 120,
+    height: 180,
+    borderRadius: 8,
+    backgroundColor: colors.gray[200],
+  },
+  skeletonTitle: {
+    width: '80%',
+    height: 24,
+    backgroundColor: colors.gray[200],
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonAuthor: {
+    width: '60%',
+    height: 16,
+    backgroundColor: colors.gray[200],
+    borderRadius: 4,
+    marginBottom: 12,
+  },
+  skeletonRating: {
+    width: '40%',
+    height: 16,
+    backgroundColor: colors.gray[200],
+    borderRadius: 4,
+    marginBottom: 12,
+  },
+  skeletonPrice: {
+    width: '30%',
+    height: 20,
+    backgroundColor: colors.gray[200],
+    borderRadius: 4,
+  },
+	container: {
     flex: 1,
     backgroundColor: colors.background,
   },
@@ -674,4 +615,32 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
   },
-})
+    headerContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: 10,
+  backgroundColor: COLORS.white,
+  borderBottomWidth: 1,
+  borderBottomColor: COLORS.lightGray,
+},
+
+backButton: {
+  width: 40,
+  alignItems: 'flex-start',
+},
+
+headerTitleContainer: {
+  flex: 1,
+  alignItems: 'center',
+},
+
+headerTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: COLORS.dark,
+},
+rightPlaceholder: {
+  width: 40, 
+},
+});

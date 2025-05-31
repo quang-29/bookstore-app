@@ -1,36 +1,45 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
-import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
+import React, { useState, useCallback } from 'react';
 import { COLORS, SIZES } from '../../constants/theme';
 import { AntDesign } from '@expo/vector-icons';
 import FormatMoney from '@/components/FormatMoney';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useOrder } from '@/context/OrderContext';
 import instance from '@/axios-instance';
 import Loader from '@/components/Loader';
 
 const ListOrders = () => {
- 
-  const [expandedOrders, setExpandedOrders] = useState({});
-  const router = useRouter();
   const [orders, setOrders] = useState([]);
-  const [loading, setIsLoading] =useState(false);
+  const [expandedOrders, setExpandedOrders] = useState({});
+  const [loading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  useEffect(() => {
-  setIsLoading(true);
+  // ✅ Tách fetchAllOrder ra riêng
   const fetchAllOrder = async () => {
+    setIsLoading(true);
     try {
       const response = await instance.get('/api/order/getAllOrders');
       const data = response?.data?.data;
       setOrders(Array.isArray(data) ? data : []);
-      setIsLoading(false);
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+      console.error('Lỗi khi lấy danh sách đơn hàng:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  fetchAllOrder();
-}, []);
-
+  // ✅ Load lại mỗi khi quay lại màn hình này
+  useFocusEffect(
+    useCallback(() => {
+      fetchAllOrder();
+    }, [])
+  );
 
   const toggleExpand = (orderId) => {
     setExpandedOrders((prev) => ({
@@ -41,19 +50,29 @@ const ListOrders = () => {
 
   const renderItem = ({ item }) => {
     const isExpanded = expandedOrders[item.orderId];
-    const displayedItems = isExpanded ? item.orderItem : item.orderItem.slice(0, 1);
+    const displayedItems = isExpanded
+      ? item.orderItem
+      : item.orderItem.slice(0, 1);
 
     return (
       <TouchableOpacity
         onPress={() =>
-          router.push({ pathname: '/order/ManageOrder', params: { order: JSON.stringify(item) } })
+          router.push({
+            pathname: '/order/ManageOrder',
+            params: { order: JSON.stringify(item) },
+          })
         }
         style={styles.orderItem}
       >
         <View style={styles.orderHeaderRow}>
-          <Text style={styles.orderDate}>🗓 {new Date(item.createAt).toLocaleDateString()}</Text>
+          <Text style={styles.orderDate}>
+            🗓 {new Date(item.createAt).toLocaleDateString()}
+          </Text>
           <Text
-            style={[styles.orderStatus, item.payment.status === 'PAID' ? styles.paid : styles.unpaid]}
+            style={[
+              styles.orderStatus,
+              item.payment.status === 'PAID' ? styles.paid : styles.unpaid,
+            ]}
           >
             {item.payment.status}
           </Text>
@@ -69,9 +88,15 @@ const ListOrders = () => {
                   resizeMode="cover"
                 />
                 <View style={styles.productInfo}>
-                  <Text style={styles.orderItemTitle} numberOfLines={2}>{orderItem.book.title}</Text>
-                  <Text style={styles.orderItemQuantity}>Số lượng: {orderItem.quantity}</Text>
-                  <Text style={styles.orderItemPrice}>Đơn giá: {FormatMoney(orderItem.productPrice)}</Text>
+                  <Text style={styles.orderItemTitle} numberOfLines={2}>
+                    {orderItem.book.title}
+                  </Text>
+                  <Text style={styles.orderItemQuantity}>
+                    Số lượng: {orderItem.quantity}
+                  </Text>
+                  <Text style={styles.orderItemPrice}>
+                    Đơn giá: {FormatMoney(orderItem.productPrice)}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -79,15 +104,28 @@ const ListOrders = () => {
         </View>
 
         {item.orderItem.length > 1 && (
-          <TouchableOpacity onPress={() => toggleExpand(item.orderId)} style={styles.viewMoreBtn}>
-            <Text style={styles.viewMoreText}>{isExpanded ? 'Thu gọn' : `Xem thêm (${item.orderItem.length - 1})`}</Text>
-            <AntDesign name={isExpanded ? 'up' : 'down'} size={14} color={COLORS.primary} />
+          <TouchableOpacity
+            onPress={() => toggleExpand(item.orderId)}
+            style={styles.viewMoreBtn}
+          >
+            <Text style={styles.viewMoreText}>
+              {isExpanded
+                ? 'Thu gọn'
+                : `Xem thêm (${item.orderItem.length - 1})`}
+            </Text>
+            <AntDesign
+              name={isExpanded ? 'up' : 'down'}
+              size={14}
+              color={COLORS.primary}
+            />
           </TouchableOpacity>
         )}
 
         <View style={styles.totalContainer}>
           <Text style={styles.orderTotalLabel}>Thành tiền:</Text>
-          <Text style={styles.orderTotal}>{FormatMoney(item.payment.amount)}</Text>
+          <Text style={styles.orderTotal}>
+            {FormatMoney(item.payment.amount)}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -96,7 +134,9 @@ const ListOrders = () => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={[...orders].sort((a, b) => new Date(b.createAt) - new Date(a.createAt))}
+        data={[...orders].sort(
+          (a, b) => new Date(b.createAt) - new Date(a.createAt)
+        )}
         renderItem={renderItem}
         keyExtractor={(item) => item.orderId.toString()}
         contentContainerStyle={styles.orderList}
@@ -106,17 +146,15 @@ const ListOrders = () => {
           </View>
         )}
       />
-
       <Loader isLoading={loading} message="Đang lấy dữ liệu đơn hàng..." />
     </View>
   );
-  
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF3E0', 
+    backgroundColor: '#FAF3E0',
     padding: 10,
   },
   orderList: {
@@ -167,7 +205,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 90,
     borderRadius: 8,
-    backgroundColor: '#FCE4EC', // pastel pink
+    backgroundColor: '#FCE4EC',
   },
   productInfo: {
     flex: 1,
@@ -227,7 +265,7 @@ const styles = StyleSheet.create({
     fontSize: SIZES.medium,
     color: '#95a5a6',
     textAlign: 'center',
-  }
+  },
 });
 
 export default ListOrders;

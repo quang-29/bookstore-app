@@ -3,13 +3,13 @@ import { Redirect, useRouter } from "expo-router";
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { images } from "../constants";
+import { useAuth } from "../context/AuthContext";
+import Loader from "@/components/Loader";
 // import { useGlobalContext } from "../context/GlobalProvider";
 
 const Welcome = () => {
   const router = useRouter();
-  
-
-
+  const { user, loading } = useAuth();
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
