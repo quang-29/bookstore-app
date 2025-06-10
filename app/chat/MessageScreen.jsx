@@ -48,7 +48,7 @@ const AdminChatScreen = () => {
     if (roomId) fetchHistory();
   }, [roomId]);
 
-  // 🔌 Kết nối WebSocket
+  const targetUser = messages.find((msg) => msg.sender !== 'admin');
   useEffect(() => {
     const socket = new SockJS(`http://${IP_CONFIG}:8080/ws`);
     stompClient.current = new Client({
@@ -134,8 +134,20 @@ const AdminChatScreen = () => {
     >
       <Stack.Screen
         options={{
-          title: 'Chat với user',
           headerTitleAlign: 'center',
+          headerTitle: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {targetUser?.senderUrl && (
+                <Image
+                  source={{ uri: targetUser.senderUrl }}
+                  style={{ width: 32, height: 32, borderRadius: 16, marginRight: 8 }}
+                />
+              )}
+              <Text style={{ fontSize: 16, fontWeight: 'bold' }}>
+                {targetUser?.sender || 'Người dùng'}
+              </Text>
+            </View>
+          ),
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
               <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
@@ -143,6 +155,7 @@ const AdminChatScreen = () => {
           ),
         }}
       />
+
 
       <FlatList
         data={messages}

@@ -88,12 +88,19 @@ const AllRating = () => {
         }}
         />
 
-      <FlatList
-        data={reviews}
-        keyExtractor={(item) => item.reviewId}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-      />
+        {reviews.length === 0 ? (
+          <View style={styles.loadingContainer}>
+            <Text>Bạn chưa đánh giá sách nào</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={reviews}
+            keyExtractor={(item) => item.reviewId.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+          />
+        )}
+
     </View>
   );
 };

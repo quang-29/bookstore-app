@@ -19,6 +19,7 @@ import BookSlider from "../../components/BookSlider";
 import Category from "../../components/Category";
 import BookList from "../../components/BookList";
 import Loader from "@/components/Loader";
+import BookView from "@/components/BookView";
 
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -90,8 +91,8 @@ const Home = () => {
         <BookSlider />
         <Category />
         <BookList books={bestSellers} />
+        <BookView books={bestSellers} />
       </ScrollView>
-
       <Loader isLoading={loading} />
     </SafeAreaView>
   );

@@ -60,6 +60,7 @@ const RootLayout = () => {
               <Stack.Screen name="settings" options={{ headerShown: false }} />
               <Stack.Screen name="rating" options={{ headerShown: false }} />
               <Stack.Screen name="chat" options={{headerShown:false}} />
+              <Stack.Screen name="buynow" options={{headerShown: false}} />
             </Stack>
             </RatedBooksProvider>
             </OrderProvider>

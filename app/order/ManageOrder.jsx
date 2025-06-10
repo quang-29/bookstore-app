@@ -8,6 +8,8 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useOrder } from '@/context/OrderContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
+import { Pressable } from 'react-native';
+import { Stack } from 'expo-router';
 
 
 const ManageOrder = () => {
@@ -124,17 +126,17 @@ const ManageOrder = () => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-
-            <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Stack.Screen
+            options={{
+            title: 'Chi tiết đơn hàng',
+            headerTitleAlign: 'center',
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
                 <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
-                </TouchableOpacity>
-
-                <View style={styles.headerTitleContainer}>
-                <Text style={styles.headerTitle}>Chi tiết đơn hàng</Text>
-                </View>
-                <View style={styles.rightPlaceholder} />
-            </View>
+              </Pressable>
+            ),
+        }}
+        />
             <ScrollView style={styles.container}>
                 {/* Ngày giao hàng */}
                 <View style={styles.orderInfo}>
@@ -265,6 +267,17 @@ const ManageOrder = () => {
                                 onPress={() => handleDeliveryOrder(orderData.orderId)}
                             >
                                 <Text style={styles.actionText}>Xác nhận đã giao hàng</Text>
+                            </TouchableOpacity>
+                        );
+                    }
+
+                    if (status === 'DELIVERED') {
+                        return (
+                            <TouchableOpacity
+                                style={[styles.actionButton, styles.contactButton]}
+                                disabled={true} // ✅ làm nút mờ và không bấm được
+                                >
+                                <Text style={styles.actionText}>Đơn hàng đã được giao</Text>
                             </TouchableOpacity>
                         );
                     }

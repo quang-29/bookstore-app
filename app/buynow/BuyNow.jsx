@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, ScrollView, Text, Image, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
+  View, ScrollView, Text, Image, TouchableOpacity, StyleSheet, Alert,
 } from 'react-native';
-import { useCart } from '../../context/CartContext';
 import FormatMoney from '../../components/FormatMoney';
 import { COLORS, SIZES } from '../../constants';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,20 +12,22 @@ import axios from 'axios';
 import { usePayment } from '../../context/PaymentContext';
 import Loader from '../../components/Loader';
 import { Pressable } from 'react-native';
-import { useRouter,Stack } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
+import instance from '@/axios-instance';
 
-
-const CheckOut = () => {
-  const { cartItems, refreshCart } = useCart();
+const BuyNow = () => {
   const { defaultAddress } = useAddress();
   const { user, token } = useAuth();
+  const { selectedPaymentMethod,buySingleBookHandlePaymentByVNpay, buySingleBookHandlePaymentByCash } = usePayment();
   const [shippingFee, setShippingFee] = useState('');
   const [deliveryDateFormatted, setDeliveryDateFormatted] = useState('');
-  const { selectedPaymentMethod, handlePaymentByCash, handlePaymentByVNPAY1 } = usePayment();
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
-
   const method = selectedPaymentMethod;
+  const { id } = useLocalSearchParams();
+  const [bookBuy, setBookBuy] = useState(null);
+
+
 
   const [selectedShippingMethod, setSelectedShippingMethod] = useState({
     id: 'express',
@@ -44,22 +45,31 @@ const CheckOut = () => {
     ? `${defaultAddress.receiverName} (${defaultAddress.phoneNumber})`
     : '';
 
-  const getTotalBookPrice = () => {
-    return cartItems.reduce((total, item) => {
-      return total + (item.selected ? item.bookPrice * item.quantity : 0);
-    }, 0);
-  };
+//   const getTotalBookPrice = () => {
+//     return bookBuy.price;
+//   };
 
   const getShippingFee = () => {
     const feeStr = selectedShippingMethod.fee?.replace(/[^\d]/g, '');
     return feeStr ? parseInt(feeStr) : 0;
   };
 
-  const totalPrice = getTotalBookPrice() + getShippingFee();
+  const totalPrice = (bookBuy?.price || 0) + getShippingFee();
 
   useEffect(() => {
-    if (!defaultAddress) return;
 
+    const getBookById = async () => {
+        try {
+            const res = await instance.get(`/api/book/${id}`);
+            console.log(res.data.data); // Kiểm tra lại structure
+            setBookBuy(res.data.data);
+        } catch (error) {
+            console.error('Error fetching book:', error);
+            Alert.alert('Lỗi', 'Không thể lấy thông tin sách');
+        }
+    };
+
+    if (!defaultAddress) return;
     const fetchBasicShipmentInfor = async () => {
       try {
         const response = await axios.post(
@@ -72,19 +82,21 @@ const CheckOut = () => {
             },
           }
         );
-
         const data = response.data;
-        const fee = data.data.fee;
-        const feeFormattedFee = 'đ' + parseInt(fee).toLocaleString('vi-VN');
-        const deliveryDateRaw = data.data.expectedDeliveryDate;
+        const fee = data?.data?.fee;
+        const feeNumber = parseInt(fee);
+        const feeFormattedFee = isNaN(feeNumber)
+            ? 'đ0'
+            : 'đ' + feeNumber.toLocaleString('vi-VN');
 
+
+        const deliveryDateRaw = data.data.expectedDeliveryDate;
         const formattedDeliveryDate = new Date(deliveryDateRaw).toLocaleDateString('vi-VN', {
           timeZone: 'Asia/Ho_Chi_Minh',
           day: '2-digit',
           month: '2-digit',
           year: 'numeric',
         });
-
         setShippingFee(feeFormattedFee);
         setDeliveryDateFormatted(formattedDeliveryDate);
         setSelectedShippingMethod({
@@ -101,58 +113,57 @@ const CheckOut = () => {
       }
     };
 
+
+    getBookById();
     fetchBasicShipmentInfor();
   }, [defaultAddress]);
 
   const handleCheckout = async () => {
-    if (!defaultAddress) {
-      Alert.alert('Thông báo', 'Bạn chưa chọn địa chỉ giao hàng!');
+    if (!defaultAddress || !bookBuy) {
+      Alert.alert('Thông báo', 'Thiếu thông tin đơn hàng hoặc địa chỉ!');
       return;
     }
-
     setIsProcessing(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      if (method.id === 'VNPAY') {
-        await handlePaymentByVNPAY1(user.cart.cartId, defaultAddress.id);
-      } else {
-        await handlePaymentByCash(user.cart.cartId, defaultAddress.id);
-        refreshCart();
-        router.replace('/checkout/Success');
-      }
-    } catch (error) {
-      Alert.alert('Lỗi', 'Có lỗi xảy ra khi đặt hàng.');
-    } finally {
-      setIsProcessing(false);
-    }
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+          if (method.id === 'VNPAY') {
+            await buySingleBookHandlePaymentByVNpay(id, defaultAddress.id);
+          } else {
+            await buySingleBookHandlePaymentByCash(id, defaultAddress.id);
+            router.replace('/checkout/Success');
+          }
+        } catch (error) {
+          Alert.alert('Lỗi', 'Có lỗi xảy ra khi đặt hàng.');
+        } finally {
+          setIsProcessing(false);
+        }
   };
 
   return (
     <View style={styles.mainContainer}>
-        <Stack.Screen
-          options={{
-            title: 'Thanh toán',
-            headerTitleAlign: 'center',
-            headerLeft: () => (
-              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
-                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
-              </Pressable>
-            ),
+      <Stack.Screen
+        options={{
+          title: 'Thanh toán',
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+            </Pressable>
+          ),
         }}
-        />
+      />
 
       <Loader isLoading={isProcessing} message="Đang xử lý đơn hàng..." />
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+        {/* Address Section */}
         <TouchableOpacity style={styles.sectionContainer} onPress={() => router.push('/checkout/ListAddress')}>
           <View style={styles.sectionHeader}>
             <Ionicons name="location-outline" size={24} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>Địa chỉ giao hàng</Text>
           </View>
-
           {defaultAddress == null ? (
             <View style={styles.infoSection}>
-              <Text style={styles.header}>Bạn chưa thiết lập địa chỉ giao hàng! Vui lòng thêm địa chỉ giao hàng. </Text>
+              <Text style={styles.header}>Bạn chưa thiết lập địa chỉ giao hàng!</Text>
             </View>
           ) : (
             <View style={styles.infoSection}>
@@ -162,83 +173,82 @@ const CheckOut = () => {
           )}
         </TouchableOpacity>
 
-        {/* Products Section */}
+        
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Ionicons name="cart-outline" size={24} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>Sản phẩm</Text>
           </View>
           <View style={styles.productSection}>
-            {cartItems.map((item) => (
-              <View key={item.cartItemId} style={styles.cartItem}>
-                <Image source={{ uri: item.book.imagePath }} style={styles.cartItemImage} />
-                <View style={styles.cartItemDetails}>
-                  <Text style={styles.cartItemTitle} numberOfLines={2}>{item.book.title}</Text>
-                  <Text style={styles.authorText}>{item.book.author}</Text>
-                  <View style={styles.additionalInfor}>
-                    <Text style={styles.cartItemPrice}>{FormatMoney(item.book.price)}</Text>
-                    <Text style={styles.quantityText}>x {item.quantity || 0}</Text>
-                  </View>
+                {bookBuy && (
+                    <View style={styles.cartItem}>
+                    <Image source={{ uri: bookBuy.imagePath }} style={styles.cartItemImage} />
+                    <View style={styles.cartItemDetails}>
+                        <Text style={styles.cartItemTitle} numberOfLines={2}>{bookBuy.title}</Text>
+                        <Text style={styles.authorText}>{bookBuy.author}</Text>
+                        <View style={styles.additionalInfor}>
+                        <Text style={styles.cartItemPrice}>{FormatMoney(bookBuy.price)}</Text>
+                        <Text style={styles.quantityText}>x 1</Text>
+                        </View>
+                    </View>
+                    </View>
+                )}
                 </View>
-              </View>
-            ))}
-          </View>
         </View>
-
         <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="car-outline" size={24} color={COLORS.primary} />
-            <Text style={styles.sectionTitle}>Phương thức vận chuyển</Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              if (shippingFee && deliveryDateFormatted) {
-                router.push({
-                  pathname: 'checkout/transportation',
-                  params: {
-                    fee: String(shippingFee),
-                    deliveryDate: String(deliveryDateFormatted),
-                  },
-                });
-              } else {
-                Alert.alert('Lỗi', 'Thông tin vận chuyển chưa sẵn sàng');
-              }
-            }}
-          >
-            <View style={styles.transportationSection}>
-              <View>
-                <Text style={styles.transportationTitle}>{selectedShippingMethod.title}</Text>
-                <Text style={styles.transportationSubtitle}>{selectedShippingMethod.description}</Text>
-                <Text style={styles.transportationFee}>{selectedShippingMethod.fee}</Text>
-                {selectedShippingMethod.voucher && <Text style={styles.voucherText}>{selectedShippingMethod.voucher}</Text>}
-              </View>
-              <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        {/* Payment Method Section */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="card-outline" size={24} color={COLORS.primary} />
-            <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
-          </View>
-          <TouchableOpacity
-            onPress={() =>
-              router.push({
-                pathname: '/checkout/payment',
-              })
-            }
-          >
-            <View style={styles.paymentSection}>
-              <View>
-                <Text style={styles.paymentTitle}>{method.title}</Text>
-                <Text style={styles.paymentSubtitle}>{method.description}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
-            </View>
-          </TouchableOpacity>
-        </View>
+                  <View style={styles.sectionHeader}>
+                    <Ionicons name="car-outline" size={24} color={COLORS.primary} />
+                    <Text style={styles.sectionTitle}>Phương thức vận chuyển</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (shippingFee && deliveryDateFormatted) {
+                        router.push({
+                          pathname: 'checkout/transportation',
+                          params: {
+                            fee: String(shippingFee),
+                            deliveryDate: String(deliveryDateFormatted),
+                          },
+                        });
+                      } else {
+                        Alert.alert('Lỗi', 'Thông tin vận chuyển chưa sẵn sàng');
+                      }
+                    }}
+                  >
+                    <View style={styles.transportationSection}>
+                      <View>
+                        <Text style={styles.transportationTitle}>{selectedShippingMethod.title}</Text>
+                        <Text style={styles.transportationSubtitle}>{selectedShippingMethod.description}</Text>
+                        <Text style={styles.transportationFee}>{selectedShippingMethod.fee}</Text>
+                        {selectedShippingMethod.voucher && <Text style={styles.voucherText}>{selectedShippingMethod.voucher}</Text>}
+                      </View>
+                      <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+        
+                {/* Payment Method Section */}
+                <View style={styles.sectionContainer}>
+                  <View style={styles.sectionHeader}>
+                    <Ionicons name="card-outline" size={24} color={COLORS.primary} />
+                    <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: '/checkout/payment',
+                      })
+                    }
+                  >
+                    <View style={styles.paymentSection}>
+                      <View>
+                        <Text style={styles.paymentTitle}>{method.title}</Text>
+                        <Text style={styles.paymentSubtitle}>{method.description}</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={24} color={COLORS.gray} />
+                    </View>
+                  </TouchableOpacity>
+                </View>
 
         {/* Summary Section */}
         <View style={styles.sectionContainer}>
@@ -249,7 +259,8 @@ const CheckOut = () => {
           <View style={styles.summarySection}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Tạm tính</Text>
-              <Text style={styles.summaryValue}>{FormatMoney(getTotalBookPrice())}</Text>
+              <Text style={styles.summaryValue}>{FormatMoney(bookBuy?.price || 0)}</Text>
+
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Phí vận chuyển</Text>
@@ -259,12 +270,11 @@ const CheckOut = () => {
               <Text style={styles.totalLabel}>Tổng cộng</Text>
               <Text style={styles.totalValue}>{FormatMoney(totalPrice)}</Text>
             </View>
-            <Text style={styles.savingsText}>Tiết kiệm: ₫49.600</Text>
           </View>
         </View>
       </ScrollView>
 
-      <TouchableOpacity style={styles.orderButton} onPress={handleCheckout} disabled={isProcessing}>
+      <TouchableOpacity style={styles.orderButton} onPress={handleCheckout}>
         <Text style={styles.orderButtonText}>Đặt hàng</Text>
       </TouchableOpacity>
     </View>
@@ -507,10 +517,10 @@ headerTitle: {
 },
 
 rightPlaceholder: {
-  width: 40, // để cân xứng với backButton
+  width: 40,
 },
 
 
 });
 
-export default CheckOut;
+export default BuyNow;

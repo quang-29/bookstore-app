@@ -8,7 +8,8 @@ import {
   Pressable,
   SafeAreaView,
   Alert,
-  Animated
+  Animated,
+  TouchableOpacity
 } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -71,6 +72,7 @@ export default function BookDetailScreen() {
   const { user } = useAuth();
   const { addToCart } = useCart();
   const [specificReviews, setSpecificReviews] = useState([]);
+  const [bookBuy,setBookBuy] = useState(null);
 
   const extractCategory = (category) => {
     if (!category) return [];
@@ -100,7 +102,6 @@ export default function BookDetailScreen() {
         setLoading(false);
       }
     };
-
     fetchAll();
   }, [id, user]);
 
@@ -108,6 +109,12 @@ export default function BookDetailScreen() {
     addToCart(bookId, 1);
   };
 
+  const handleBuyNow = (id) => {
+      router.push({
+        pathname: '/buynow/BuyNow',
+        params: { id: id }
+      });
+    }
   const handleLikeBook = async () => {
     if (!user?.userId) {
       Alert.alert("Thông báo", "Vui lòng đăng nhập để thực hiện chức năng này");
@@ -284,14 +291,22 @@ export default function BookDetailScreen() {
         <ReviewList reviews={specificReviews} />
           </ScrollView>
           <View style={styles.footer}>
-            <Button
-              title="Add to Cart"
-              leftIcon={<Feather name="shopping-cart" size={20} color={colors.white} />}
-              onPress={() => handleAddToCart(id)}
-              style={styles.addToCartButton}
-              textStyle={{ color: colors.white }}
-            />
-          </View>
+              <TouchableOpacity
+                style={[styles.footerButton, { backgroundColor: colors.primary }]}
+                onPress={() => handleBuyNow(id)}
+              >
+                <Feather name="credit-card" size={20} color={colors.white} />
+                <Text style={styles.footerButtonText}>Mua ngay</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.footerButton, { backgroundColor: colors.secondary }]}
+                onPress={() => handleAddToCart(id)}
+              >
+                <Feather name="shopping-cart" size={20} color={colors.white} />
+                <Text style={styles.footerButtonText}>Thêm vào giỏ</Text>
+              </TouchableOpacity>
+        </View>
         </>
       ) : (
         <View style={styles.notFound}>
@@ -625,11 +640,6 @@ const styles = StyleSheet.create({
   borderBottomColor: COLORS.lightGray,
 },
 
-backButton: {
-  width: 40,
-  alignItems: 'flex-start',
-},
-
 headerTitleContainer: {
   flex: 1,
   alignItems: 'center',
@@ -643,4 +653,55 @@ headerTitle: {
 rightPlaceholder: {
   width: 40, 
 },
+footer: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  padding: 16,
+  backgroundColor: colors.white,
+  borderTopWidth: 1,
+  borderTopColor: colors.lightGray,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: -2 },
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  elevation: 3,
+},
+
+footerButton: {
+  flex: 1,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingVertical: 14,
+  marginHorizontal: 5,
+  borderRadius: 8,
+},
+
+footerButtonText: {
+  color: colors.white,
+  fontSize: 16,
+  fontWeight: '600',
+  marginLeft: 8,
+},
+
+notFound: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: 20,
+},
+
+notFoundText: {
+  fontSize: 16,
+  color: colors.gray,
+  marginBottom: 20,
+},
+
+backButton: {
+  backgroundColor: colors.primary,
+  paddingVertical: 12,
+  paddingHorizontal: 24,
+  borderRadius: 8,
+},
+
 });

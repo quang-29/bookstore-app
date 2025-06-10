@@ -31,7 +31,6 @@ const profileSections = [
   {
     title: 'Preferences',
     items: [
-      { icon: 'bell', label: 'Notifications', route: '/notifications' },
       { icon: 'settings', label: 'Settings', route: '/settings/SettingScreen' },
     ]
   },
@@ -50,6 +49,7 @@ export default function ProfileScreen() {
   const { setDefaultAddress } = useAddress();
   const { user, logout, setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoading1,setIsLoading1] = useState(false);
  
 
   const isLoggedIn = !!user;
@@ -64,10 +64,10 @@ export default function ProfileScreen() {
           text: 'Đăng xuất',
           style: 'destructive',
           onPress: async () => {
-            setIsLoading(true);
+            setIsLoading1(true);
             await logout();
             setTimeout(() => {
-              setIsLoading(false);
+              setIsLoading1(false);
               router.replace('/sign-in');
             }, 2000);
           }
@@ -202,6 +202,7 @@ const handleChangeAvatar = async () => {
         )}
       </ScrollView>
       <Loader isLoading={isLoading} message="Đang xử lí..." />
+      <Loader isLoading={isLoading1} message="Đang đăng xuất..." />
     </SafeAreaView>
   );
 }

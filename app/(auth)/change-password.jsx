@@ -56,7 +56,7 @@ const changePassword = () => {
         <SafeAreaView style={styles.container}>
             <ScrollView>
                 <View style={styles.innerContainer}>
-                    <Image source={images.logo} resizeMode="contain" style={styles.logo} />
+                    <Image source={images.logo5} resizeMode="contain" style={styles.logo} />
 
                     <Text style={styles.title}>Đổi mật khẩu</Text>
 
@@ -120,8 +120,8 @@ const styles = StyleSheet.create({
         minHeight: Dimensions.get("window").height - 200,
     },
     logo: {
-        width: 115,
-        height: 34,
+        width: 200,
+        height: 84,
         alignSelf: "center",
     },
     title: {

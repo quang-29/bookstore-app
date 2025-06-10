@@ -24,6 +24,36 @@ const UserChatScreen = () => {
   const [text, setText] = useState('');
   const roomId = user?.userId ? `room_${user.userId}` : null;
 
+  // 🧠 Tạo phòng chat ngay khi roomId có
+  useEffect(() => {
+    const createRoomIfNotExists = async () => {
+      try {
+        await instance.post('/api/rooms', {
+          roomId,
+          userId: user.userId,
+          userAvatar: user.avatarUrl,
+          userName: user.username,
+        });
+        console.log('✅ Phòng chat đã được tạo.');
+      } catch (error) {
+        const isAlreadyExist =
+          error.response?.status === 400 &&
+          error.response?.data === 'Room is already existed';
+
+        if (isAlreadyExist) {
+          console.log('ℹ️ Phòng đã tồn tại.');
+        } else {
+          console.error('❌ Lỗi tạo phòng:', error.response?.data || error.message);
+        }
+      }
+    };
+
+    if (roomId) {
+      createRoomIfNotExists();
+    }
+  }, [roomId]);
+
+  // 🧠 Lấy lịch sử tin nhắn
   useEffect(() => {
     const fetchHistory = async () => {
       try {
@@ -37,7 +67,7 @@ const UserChatScreen = () => {
         }));
         setMessages(historyMessages.reverse());
       } catch (error) {
-        console.error('Lỗi tải lịch sử tin nhắn:', error);
+        console.error('❌ Lỗi tải lịch sử tin nhắn:', error);
       }
     };
 
@@ -46,13 +76,14 @@ const UserChatScreen = () => {
     }
   }, [roomId]);
 
+  // 🧠 Kết nối WebSocket
   useEffect(() => {
     const socket = new SockJS(`http://${IP_CONFIG}:8080/ws`);
     stompClient.current = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
       onConnect: () => {
-        console.log('WebSocket đã kết nối');
+        console.log('✅ WebSocket đã kết nối');
         connected.current = true;
 
         stompClient.current.subscribe(`/topic/room/${roomId}`, (msg) => {
@@ -68,10 +99,10 @@ const UserChatScreen = () => {
         });
       },
       onStompError: (frame) => {
-        console.error('STOMP lỗi:', frame);
+        console.error('❌ STOMP lỗi:', frame);
       },
       onWebSocketError: (event) => {
-        console.error('WebSocket lỗi:', event);
+        console.error('❌ WebSocket lỗi:', event);
       },
     });
 
@@ -80,59 +111,37 @@ const UserChatScreen = () => {
     return () => {
       if (stompClient.current && stompClient.current.active) {
         stompClient.current.deactivate();
-        console.log('WebSocket đã ngắt kết nối khi rời màn hình');
+        console.log('🔌 WebSocket đã ngắt kết nối');
       }
     };
   }, [roomId]);
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!text.trim() || !user || !roomId) return;
 
-    if (!connected.current) {
-      try {
-        await instance.post('/api/rooms', {
-          roomId,
-          userId: user.userId,
-          userAvatar: user.avatarUrl,
-          userName: user.username,
-        });
-        console.log('Phòng chat đã được tạo.');
-      } catch (error) {
-        const isAlreadyExist =
-          error.response?.status === 400 &&
-          error.response?.data === 'Room is already existed';
-
-        if (isAlreadyExist) {
-          console.log('Phòng đã tồn tại. Tiếp tục kết nối WebSocket...');
-        } else {
-          console.error('Lỗi tạo phòng:', error.response?.data || error.message);
-          return;
-        }
-      }
+    if (!stompClient.current || !stompClient.current.connected) {
+      console.warn('⚠️ WebSocket chưa sẵn sàng.');
+      return;
     }
 
     sendMessage();
   };
 
   const sendMessage = () => {
-    if (!stompClient.current || !stompClient.current.connected) {
-      console.warn('WebSocket chưa sẵn sàng.');
-      return;
-    }
-
-    const message = {
-      sender: user.username,
-      content: text,
-      senderUrl: user.avatarUrl,
-    };
-
-    stompClient.current.publish({
-      destination: `/app/sendMessage/${roomId}`,
-      body: JSON.stringify(message),
-    });
-
-    setText('');
+  const message = {
+    sender: user.username,
+    content: text,
+    senderUrl: user.avatarUrl || 'https://res.cloudinary.com/daxt0vwoc/image/upload/v1740297885/User-avatar.svg_nihuye.png',
   };
+
+  stompClient.current.publish({
+    destination: `/app/sendMessage/${roomId}`,
+    body: JSON.stringify(message),
+  });
+
+  setText('');
+};
+
 
   const renderItem = ({ item }) => {
     const isUser = item.sender === user.username;
@@ -147,7 +156,6 @@ const UserChatScreen = () => {
         {!isUser && item.senderUrl && (
           <Image source={{ uri: item.senderUrl }} style={styles.avatar} />
         )}
-
         <View
           style={[
             styles.messageContent,
@@ -164,7 +172,6 @@ const UserChatScreen = () => {
             {item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </Text>
         </View>
-
         {isUser && item.senderUrl && (
           <Image source={{ uri: item.senderUrl }} style={styles.avatar} />
         )}

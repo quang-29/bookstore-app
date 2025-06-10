@@ -59,7 +59,7 @@ const Setting = () => {
         Alert.alert('Thất bại', 'Không thể cập nhật thông tin.');
       }
     } catch (error) {
-      console.error('Error:', error);
+      // console.error('Error:', error);
       Alert.alert('Lỗi', 'Đã xảy ra lỗi khi cập nhật thông tin!');
     }
   };

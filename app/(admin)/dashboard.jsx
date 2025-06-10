@@ -4,6 +4,11 @@ import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import instance from '@/axios-instance';
 import FormatMoney from '@/components/FormatMoney';
 import { router } from 'expo-router';
+import { RefreshControl } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
+
+
 
 const DashboardScreen = () => {
   const [numberOfUsers, setNumberOfUsers] = useState(0);
@@ -13,6 +18,14 @@ const DashboardScreen = () => {
   const [bestSellers, setBestSellers] = useState([]);
   const [showAll, setShowAll] = useState(false);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  
+
+  const onRefresh = async () => {
+  setRefreshing(true);
+  await fetchData();
+  setRefreshing(false);
+};
 
   const fetchRecentOrders = async () => {
     try {
@@ -25,9 +38,7 @@ const DashboardScreen = () => {
       console.error('Lỗi khi lấy đơn hàng:', error);
     }
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = async () => {
       try {
         const responseUsers = await instance.get('/api/user/getNumberOfUsers');
         const responseOrders = await instance.get('/api/order/getNumberOfOrders');
@@ -47,11 +58,24 @@ const DashboardScreen = () => {
       }
     };
 
-    fetchData();
-  }, []);
+    useFocusEffect(
+      useCallback(() => {
+        fetchData();
+      }, [])
+    );
+
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        colors={['#2196F3']}
+        tintColor="#2196F3"
+      />
+  }>
       <Text style={styles.header}>Dashboard Admin</Text>
 
       <View style={styles.cardContainer}>

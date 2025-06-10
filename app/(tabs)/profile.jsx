@@ -27,7 +27,6 @@ const profileSections = [
     items: [
       { icon: 'shopping-bag', label: 'Orders', route: '/order/ListOrders' },
       { icon: 'heart', label: 'Wishlist', route: '/wishlist/WishList' },
-      { icon: 'credit-card', label: 'Payment Methods', route: '/payment-methods' },
       { icon: 'map-pin', label: 'Addresses', route: '/checkout/ListAddress' },
       { icon: 'star', label: 'Reviews', route: '/rating/AllRating' },
     ]
@@ -35,7 +34,7 @@ const profileSections = [
   {
     title: 'Preferences',
     items: [
-      { icon: 'bell', label: 'Notifications', route: '/notifications' },
+      // { icon: 'bell', label: 'Notifications', route: '/notifications' },
       { icon: 'settings', label: 'Settings', route: '/settings/SettingScreen' },
     ]
   },
@@ -52,8 +51,9 @@ const profileSections = [
 export default function ProfileScreen() {
   const router = useRouter();
   const { setDefaultAddress } = useAddress();
-  const { user, logout, setUser } = useAuth();
+  const { user, logout, setUser, storeUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoading1,setIsLoading1] = useState(false);
  
 
   const isLoggedIn = !!user;
@@ -68,10 +68,10 @@ export default function ProfileScreen() {
           text: 'Đăng xuất',
           style: 'destructive',
           onPress: async () => {
-            setIsLoading(true);
+            setIsLoading1(true);
             await logout();
             setTimeout(() => {
-              setIsLoading(false);
+              setIsLoading1(false);
               router.replace('/sign-in');
             }, 2000);
           }
@@ -118,16 +118,17 @@ const handleChangeAvatar = async () => {
 
       if (response.data.success === true) {
         const imageUrl = response.data.url;
-        console.log(imageUrl);
-        setUser({
+        const updatedUser = {
           ...user,
           avatarUrl: imageUrl,
-        });
+        };
+        setUser(updatedUser);
+        await storeUser(updatedUser);  
+
       } else {
         Alert.alert('Thất bại', 'Không thể thay đổi ảnh đại diện.');
       }
     } catch (error) {
-      console.error('Lỗi upload ảnh:', error);
       Alert.alert('Lỗi', 'Đã xảy ra lỗi khi thay đổi ảnh đại diện.');
     } finally {
       setIsLoading(false);
@@ -206,6 +207,8 @@ const handleChangeAvatar = async () => {
         )}
       </ScrollView>
       <Loader isLoading={isLoading} message="Đang xử lí..." />
+      <Loader isLoading={isLoading1} message="Đang đăng xuất..." />
+
     </SafeAreaView>
   );
 }

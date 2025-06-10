@@ -10,8 +10,10 @@ import sach2 from "../assets/images/caycamngotcuatoi.jpg";
 import sach3 from "../assets/images/khonggiadinh.jpg";
 import sach4 from "../assets/images/modomdom.jpg";
 import sach5 from "../assets/images/motthoangtarucroonhangian.jpg";
+import logo1 from "../assets/images/booktopia.png";
+import card2 from "../assets/images/bookophile.jpg";
+import logo5 from "../assets/images/logo5.png";
 
 
 
-
-export default { profile, thumbnail, cards, path, logo, logoSmall, empty, sach1,sach2,sach3,sach4,sach5 };
+export default { profile, thumbnail, cards, path, logo, logoSmall, empty, sach1,sach2,sach3,sach4,sach5, logo1,logo5, card2 };

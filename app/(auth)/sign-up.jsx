@@ -28,10 +28,17 @@ const SignUp = () => {
   });
 
   const submit = async () => {
-    if (!form.username || !form.email || !form.password) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
-      return;
-    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!form.username || !form.email || !form.password) {
+    Alert.alert("Thông báo", "Vui lòng nhập đầy đủ thông tin.");
+    return;
+  }
+
+  if (!emailRegex.test(form.email)) {
+    Alert.alert("Thông báo", "Định dạng email không hợp lệ.");
+    return;
+  }
 
     setSubmitting(true);
     try {
@@ -56,7 +63,7 @@ const SignUp = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.innerContainer}>
-          <Image source={images.logo} resizeMode="contain" style={styles.logo} />
+          <Image source={images.logo5} resizeMode="contain" style={styles.logo} />
 
           <Text style={styles.title}>Đăng ký</Text>
 
@@ -119,8 +126,8 @@ const styles = StyleSheet.create({
     minHeight: Dimensions.get("window").height - 200,
   },
   logo: {
-    width: 115,
-    height: 34,
+    width: 200,
+    height: 84,
     alignSelf: "center",
   },
   title: {

@@ -87,18 +87,29 @@ const ListAddress = () => {
       )}
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.editBtn}
-          onPress={() => {
-            setDefaultAddress(item);
-            router.back();
-          }}
-        >
-          <Text style={styles.editText}>Chọn</Text>
+        <TouchableOpacity style={styles.actionBtnBlue} onPress={() => {
+          setDefaultAddress(item);
+          router.back();
+        }}>
+          <Ionicons name="checkmark" size={16} color="#fff" />
+          <Text style={styles.btnText}>Chọn</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.deleteBtn}>
-          <Text style={styles.editText}>Xóa</Text>
+        <TouchableOpacity style={styles.actionBtnGray} onPress={() => {
+          router.push({ pathname: '/checkout/EditAddress', params: { id: item.id } });
+        }}>
+          <Ionicons name="create-outline" size={16} color="#fff" />
+          <Text style={styles.btnText}>Sửa</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionBtnRed} onPress={() => {
+          Alert.alert('Xác nhận', 'Bạn có chắc muốn xóa địa chỉ này?', [
+            { text: 'Hủy', style: 'cancel' },
+            { text: 'Xóa', style: 'destructive', onPress: () => {/* gọi API xóa ở đây */} },
+          ]);
+        }}>
+          <Ionicons name="trash-outline" size={16} color="#fff" />
+          <Text style={styles.btnText}>Xóa</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -119,9 +130,8 @@ const ListAddress = () => {
       {addresses.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Ionicons name="location-outline" size={64} color="#bdc3c7" style={{ alignSelf: 'center'}} />
-           <Text>Bạn chưa thiết lập địa chỉ nhận hàng nào</Text>
+          <Text>Bạn chưa thiết lập địa chỉ nhận hàng nào</Text>
         </View>
-       
       ) : (
         <FlatList
           data={addresses}
@@ -148,13 +158,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f9fafb',
     paddingHorizontal: 16,
-  },
-  title: {
-    fontSize: 18,
-    color: '#7f8c8d',
-    marginBottom: 12,
-    textAlign: 'center',
-    flex: 1,
   },
   card: {
     backgroundColor: '#ffffff',
@@ -204,25 +207,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
+    gap: 8,
   },
-  editBtn: {
+  actionBtnBlue: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#3498db',
-    paddingVertical: 10,
     borderRadius: 8,
-    alignItems: 'center',
-    width: '48%',
+    paddingVertical: 10,
   },
-  deleteBtn: {
+  actionBtnGray: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#7f8c8d',
+    borderRadius: 8,
+    paddingVertical: 10,
+  },
+  actionBtnRed: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#e74c3c',
-    paddingVertical: 10,
     borderRadius: 8,
-    alignItems: 'center',
-    width: '48%',
+    paddingVertical: 10,
   },
-  editText: {
+  btnText: {
     color: '#fff',
-    fontWeight: '600',
     fontSize: 13,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   addButton: {
     position: 'absolute',
@@ -245,33 +263,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   headerContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: 10,
-  backgroundColor: COLORS.white,
-  borderBottomWidth: 1,
-  borderBottomColor: COLORS.lightGray,
-  marginTop: 50,
-},
-
-backButton: {
-  width: 40,
-  alignItems: 'flex-start',
-},
-
-headerTitleContainer: {
-  flex: 1,
-  alignItems: 'center',
-},
-
-headerTitle: {
-  fontSize: 18,
-  fontWeight: 'bold',
-  color: COLORS.dark,
-},
-
-rightPlaceholder: {
-  width: 40, // để cân xứng với backButton
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+    marginTop: 50,
+  },
+  backButton: {
+    width: 40,
+    alignItems: 'flex-start',
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.dark,
+  },
+  rightPlaceholder: {
+    width: 40,
+  },
 });

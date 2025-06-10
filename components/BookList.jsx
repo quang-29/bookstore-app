@@ -17,6 +17,9 @@ import FormatMoney from './FormatMoney';
 import instance from '@/axios-instance';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { Platform } from 'react-native';
+import { ImageBackground } from 'react-native';
+
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width / 2.2;
@@ -158,25 +161,33 @@ const BookList = ({ books }) => {
                         activeOpacity={0.8}
                     >
                         <View style={styles.imageContainer}>
-                            <Image
+                            <ImageBackground
                                 source={{ uri: book.imagePath }}
                                 style={styles.bookImage}
-                                onError={(e) => console.log('Image loading error:', e.nativeEvent.error)}
-                            />
-                            <TouchableOpacity
-                                onPress={() => handleLikeButton(book.id)}
-                                style={styles.likeIcon}
-                            >
-                                <Ionicons
+                                imageStyle={styles.bookImageRounded}
+                                resizeMode="cover"
+                                >
+                                <TouchableOpacity
+                                    onPress={() => handleLikeButton(book.id)}
+                                    style={styles.likeIcon}
+                                >
+                                    <Ionicons
                                     name={likedBooks[book.id] ? 'heart' : 'heart-outline'}
                                     size={24}
                                     color="#6c5ce7"
-                                />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => handleAddToCart(book.id)} style={styles.cartIcon}>
-                                <Ionicons name="cart-outline" size={24} color="#6c5ce7" />
-                            </TouchableOpacity>
-                        </View>
+                                    />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => handleAddToCart(book.id)}
+                                    style={styles.cartIcon}
+                                >
+                                    <Ionicons name="cart-outline" size={24} color="#6c5ce7" />
+                                </TouchableOpacity>
+                                </ImageBackground>
+
+                    </View>
+
 
                         <View style={styles.bookInfo}>
                             <Text style={styles.bookTitle} numberOfLines={1}>{book.title}</Text>
@@ -256,20 +267,38 @@ const styles = StyleSheet.create({
         marginRight: 16,
         borderRadius: 8,
         backgroundColor: '#fff',
-        elevation: 2,
-        overflow: 'hidden',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        overflow: 'visible',
+        marginVertical: 8,
     },
     imageContainer: {
         width: '100%',
         height: CARD_HEIGHT * 0.65,
         position: 'relative',
     },
-    bookImage: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'cover',
-        backgroundColor: '#f0f0f0',
-    },
+    // bookImage: {
+    //     width: '100%',
+    //     height: '100%',
+    //     resizeMode: 'cover',
+    //     backgroundColor: '#f0f0f0',
+    //     borderTopLeftRadius: 8,
+    //     borderTopRightRadius: 8,
+    // },
+        bookImage: {
+            width: '100%',
+            height: '100%',
+            justifyContent: 'center', // hoặc 'center' nếu muốn icon giữa ảnh
+        },
+
+        bookImageRounded: {
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8,
+        },
+
     likeIcon: {
         position: 'absolute',
         top: 8,

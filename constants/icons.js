@@ -15,7 +15,8 @@ import cart from "../assets/icons/cart.png";
 import cart1 from "../assets/icons/cart1.png";
 import cart2 from "../assets/icons/cart2.png";
 import cartpro from "../assets/icons/cartpro.png";
-import chat from "../assets/icons/plus.png";
+import chat from "../assets/icons/chaticon.png";
+import book from "../assets/icons/bookicon.png";
 
 export default {
   play,
@@ -36,4 +37,5 @@ export default {
   cart2,
   cartpro,
   chat,
+  book
 };

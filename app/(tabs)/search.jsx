@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES } from '../../constants/theme';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,6 +7,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import colors from '@/constants/colors';
 import instance from '@/axios-instance';
 import VerticalBookList from '@/components/VerticalBookList';
+import { IP_CONFIG } from '@/config/ipconfig';
 
 
 const Search = () => {
@@ -14,6 +15,16 @@ const Search = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [noResult, setNoResult] = useState(false);
+  const [bookInfo, setBookInfo] = useState(null);
+
+  useEffect(() => {
+  (async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Cảnh báo', 'Bạn cần cấp quyền truy cập camera để chụp ảnh.');
+    }
+  })();
+}, []);
 
 
   const handleSearch = async () => {
@@ -36,17 +47,51 @@ const Search = () => {
     }
   };
 
-  const handleImageSelect = () => {
-    Alert.alert(
-      'Chọn phương thức',
-      'Bạn muốn xử lý ảnh theo cách nào?',
-      [
-        { text: '📷 Vintern (ảnh bìa)', onPress: () => pickImageAndProcessWithVintern() },
-        { text: '🧾 OCR (tìm ISBN hoặc tên)', onPress: () => pickImageAndProcessWithOCR() },
-        { text: 'Huỷ', style: 'cancel' },
-      ]
-    );
-  };
+  // const handleImageSelect = () => {
+  //   Alert.alert(
+  //     'Chọn phương thức',
+  //     'Bạn muốn xử lý ảnh theo cách nào?',
+  //     [
+  //       { text: 'Vintern (ảnh bìa)', onPress: () => pickImageAndProcessWithVintern() },
+  //       { text: 'OCR (tìm ISBN hoặc tên)', onPress: () => pickImageAndProcessWithOCR() },
+  //       { text: 'Huỷ', style: 'cancel' },
+  //     ]
+  //   );
+  // };
+      const handleImageSelect = () => {
+  Alert.alert(
+    'Chọn phương thức tìm kiếm',
+    'Bạn muốn tìm kiếm ảnh theo phương thức nào?',
+    [
+      { text: 'Chụp ảnh bìa sách', onPress: () => captureImageWithVintern() },
+      { text: 'Chụp ảnh mã ISBN', onPress: () => captureImageWithOCR() },
+      { text: 'Chọn ảnh bìa sách từ thư viện', onPress: () => pickImageAndProcessWithVintern() },
+      { text: 'Chọn ảnh mã ISBN sách thư viện', onPress: () => pickImageAndProcessWithOCR() },
+      { text: 'Huỷ', style: 'cancel' },
+    ]
+  );
+};
+    const captureImageWithOCR = async () => {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.6,
+      });
+
+      if (!result.canceled && result.assets?.length > 0) {
+        await processImage(result.assets[0].uri);
+      }
+    };
+
+    const captureImageWithVintern = async () => {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.6,
+      });
+
+      if (!result.canceled && result.assets?.length > 0) {
+        await processImageWithVintern(result.assets[0].uri);
+      }
+    };
 
   const pickImageAndProcessWithOCR = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -85,7 +130,7 @@ const Search = () => {
       type: 'image/jpeg',
     });
 
-    const ocrRes = await fetch('http://192.168.111.164:5000/api/ocr', {
+    const ocrRes = await fetch(`http://${IP_CONFIG}:5000/api/ocr`, {
       method: 'POST',
       body: formData,
     });
@@ -107,6 +152,7 @@ const Search = () => {
     const isbnMatch = text.match(/97[89][\-\s]?\d{1,5}[\-\s]?\d{1,7}[\-\s]?\d{1,7}[\-\s]?\d/);
     if (isbnMatch) {
       const cleanIsbn = isbnMatch[0].replace(/[-\s]/g, '');
+      setBookInfo({ isbn: cleanIsbn});
       const searchRes = await instance.get(`/api/book/searchByISBN?str=${cleanIsbn}`);
       if (searchRes.data.data) {
         setResults([searchRes.data.data]);
@@ -125,8 +171,7 @@ const Search = () => {
     }
 
   } catch (error) {
-    console.error('Lỗi xử lý ảnh:', error);
-    Alert.alert('Lỗi', 'Không thể xử lý ảnh.');
+    Alert.alert('Thông báo', 'Cửa hàng của chúng tôi không có sách có mã ISBN nào giống như sách bạn tải lên.');
   } finally {
     setLoading(false);
   }
@@ -149,7 +194,7 @@ const Search = () => {
       type: 'image/jpeg',
     });
 
-    const vinternRes = await fetch('http://192.168.111.164:5000/api/vintern', {
+    const vinternRes = await fetch(`http://${IP_CONFIG}:5000/api/vintern`, {
       method: 'POST',
       body: formData,
     });
@@ -163,12 +208,13 @@ const Search = () => {
     const text = result.result || '';
 
     if (!text || text.trim().length === 0) {
-      Alert.alert('Không nhận diện được tên sách');
+      Alert.alert('Không nhận diện được tên sách. Vui lòng thử lại với ảnh khác.');
       return;
     }
 
     const match = text.match(/(?:\*\*Tên sách:\*\*|Tên sách:)\s*(.+)/i);
     const title = match ? match[1].split('(')[0].trim() : text.trim();
+    setBookInfo({ title });
 
     const searchRes = await instance.get(`/api/book/search?name=${encodeURIComponent(title)}`);
     if (searchRes.data.data?.length > 0) {
@@ -180,7 +226,7 @@ const Search = () => {
     }
   } catch (error) {
     console.error('Lỗi Vintern:', error);
-    Alert.alert('Lỗi', 'Không thể xử lý ảnh với mô hình Vintern.');
+    Alert.alert('Lỗi', 'Ảnh sai định dạng hoặc quá mờ, vui lòng thử lại.');
   } finally {
     setLoading(false);
   }
@@ -219,7 +265,20 @@ const Search = () => {
           {loading ? (
       <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 30 }} />
     ) : results.length > 0 ? (
-      <VerticalBookList books={results} />
+      <View style={{ marginTop: 10, height: '700' }}>
+          <Text style={styles.resultHeader}>Sách bạn đang tìm là:</Text>
+          {results && (
+            <View style={styles.bookInfoContainer}>
+              <Text style={styles.bookInfoText}>Tên sách: {results[0].title}</Text>
+              {results[0].isbn && (
+                <Text style={styles.bookInfoText}>ISBN: {results[0].isbn}</Text>
+              )}
+            </View>
+          )}
+          <VerticalBookList books={results} />
+      </View>
+
+
     ) : noResult ? (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyTitle}>Xin lỗi, cửa hàng chúng tôi hiện chưa có sách mà bạn đang tìm kiếm</Text>
@@ -287,6 +346,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
+  resultHeader: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: colors.text,
+  marginBottom: 10,
+  marginTop: 20,
+},
+
 });
 
 export default Search;

@@ -14,15 +14,15 @@ const Welcome = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.innerContainer}>
-          <Image source={images.logo} style={styles.logo} resizeMode="contain" />
+          <Image source={images.logo5} style={styles.logo} resizeMode="contain" />
 
-          <Image source={images.cards} style={styles.cards} resizeMode="contain" />
+          <Image source={images.card2} style={styles.cards} resizeMode="cover" />
 
           <View style={styles.textContainer}>
             <Text style={styles.title}>
               Khám phá những khả năng bất tận
               trong những trang sách với{" "}
-              <Text style={styles.highlight}>BookTopia</Text>
+              <Text style={styles.highlight}>Bookophile</Text>
             </Text>
 
             <Image source={images.path} style={styles.path} resizeMode="contain" />
@@ -58,14 +58,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   logo: {
-    width: 130,
+    width: 200,
     height: 84,
   },
   cards: {
-    width: "100%",
-    maxWidth: 380,
-    height: 298,
-  },
+  width: "100%",
+  maxWidth: 380,
+  height: 298,
+  borderRadius: 60,
+  borderWidth: 2,            
+  borderColor: "#ffffff",   
+},
+
   textContainer: {
     position: "relative",
     marginTop: 20,

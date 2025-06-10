@@ -8,34 +8,35 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const Success = () => {
   return (
-    <View style={styles.container}>
+    <LinearGradient colors={['#FFECEB', '#FFFFFF']} style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      <View style={styles.box}>
-        <Ionicons name="checkmark-circle" size={64} color="#E53935" style={styles.icon} />
+      <View style={styles.card}>
+        <Ionicons name="checkmark-circle-outline" size={84} color="#4CAF50" style={styles.icon} />
 
-        <Text style={styles.title}>Đặt hàng thành công</Text>
+        <Text style={styles.title}>Đặt hàng thành công!</Text>
         <Text style={styles.subtitle}>
-          Cùng BookTopias đồng hành cùng bạn trong những năm tháng tươi đẹp của cuộc đời bạn.
+          Cảm ơn bạn đã tin tưởng BookTopias. Hãy cùng chúng tôi khám phá tri thức mỗi ngày!
         </Text>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={() => router.push('/home')}>
-            <Text style={styles.buttonText}>Trang chủ</Text>
+        <View style={styles.buttonGroup}>
+          <TouchableOpacity style={styles.buttonPrimary} onPress={() => router.push('/home')}>
+            <Text style={styles.buttonText}>Về trang chủ</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={styles.buttonOutline}
             onPress={() => router.replace('/order/ListOrders')}
           >
-            <Text style={styles.buttonText}>Đơn mua</Text>
+            <Text style={styles.buttonOutlineText}>Xem đơn hàng</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -44,54 +45,64 @@ export default Success;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F4', // ✅ nền xám sáng nhẹ
     justifyContent: 'center',
     alignItems: 'center',
   },
-  box: {
-    backgroundColor: '#FFFFFF',
-    padding: 24,
-    borderRadius: 16,
+  card: {
+    backgroundColor: '#fff',
+    padding: 32,
+    borderRadius: 24,
+    marginHorizontal: 24,
     alignItems: 'center',
-    marginHorizontal: 20,
-    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 10,
   },
   icon: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#E53935', // đỏ cam hài hòa
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#2E7D32',
     marginBottom: 12,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 14,
-    color: '#616161', // xám đậm
+    fontSize: 15,
+    color: '#424242',
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 28,
+    lineHeight: 22,
   },
-
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
+  buttonGroup: {
+    width: '100%',
   },
-  button: {
-    backgroundColor: '#E53935', // cam đậm
-    paddingVertical: 10,
+  buttonPrimary: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 14,
     paddingHorizontal: 24,
-    borderRadius: 12,
-    marginHorizontal: 5,
+    borderRadius: 16,
+    marginBottom: 12,
+    alignItems: 'center',
   },
   buttonText: {
-    color: '#FFFFFF', // vẫn tốt nếu nền cam
+    color: '#fff',
+    fontSize: 15,
     fontWeight: '600',
-    fontSize: 14,
   },
-
+  buttonOutline: {
+    borderColor: '#4CAF50',
+    borderWidth: 1.5,
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  buttonOutlineText: {
+    color: '#4CAF50',
+    fontSize: 15,
+    fontWeight: '600',
+  },
 });

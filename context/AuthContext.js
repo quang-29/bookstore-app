@@ -41,7 +41,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (userData, token) => {
     try {
-      // Set token in axios instance
       instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       setToken(token);
@@ -73,6 +72,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
+    storeUser,
   };
 
   return (

@@ -5,7 +5,7 @@ export default function OrderLayout() {
     <Stack>
       <Stack.Screen name="ListOrders" options={{title: 'Danh sách đơn hàng', headerShown: true }} />
       <Stack.Screen name="[id]" options={{ title: 'Chi tiết đơn hàng', headerShown: true }} />
-      <Stack.Screen name="ManageOrder" options={{ title: 'Quản lí đơn hàng', headerShown: false }} />
+      <Stack.Screen name="ManageOrder" options={{ title: 'Quản lí đơn hàng', headerShown: true }} />
     </Stack>
   );
 }

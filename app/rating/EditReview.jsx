@@ -7,14 +7,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Pressable,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import instance from '@/axios-instance';
-import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants';
-import { Pressable } from 'react-native';
-import {Stack } from 'expo-router';
 import { Loader } from '@/components';
 
 const EditReview = () => {
@@ -25,7 +23,6 @@ const EditReview = () => {
   const [ratePoint, setRatePoint] = useState(5);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
 
   useEffect(() => {
     const fetchReview = async () => {
@@ -44,25 +41,25 @@ const EditReview = () => {
   }, [reviewId]);
 
   const handleUpdate = async () => {
-  setSubmitting(true); 
-  try {
-    const response = await instance.post('/api/review/updateReview', {
-      id: reviewId,
-      content,
-      ratePoint,
-    });
+    setSubmitting(true);
+    try {
+      const response = await instance.post('/api/review/updateReview', {
+        id: reviewId,
+        content,
+        ratePoint,
+      });
 
-    if (response.data.code === 200) {
-      Alert.alert('Thành công', 'Đánh giá đã được cập nhật!');
-      router.back();
+      if (response.data.code === 200) {
+        Alert.alert('Thành công', 'Đánh giá đã được cập nhật!');
+        router.back();
+      }
+    } catch (error) {
+      console.error('Lỗi khi cập nhật review:', error);
+      Alert.alert('Lỗi', 'Không thể cập nhật đánh giá');
+    } finally {
+      setSubmitting(false);
     }
-  } catch (error) {
-    console.error('Lỗi khi cập nhật review:', error);
-    Alert.alert('Lỗi', 'Không thể cập nhật đánh giá');
-  } finally {
-    setSubmitting(false); 
-  }
-};
+  };
 
   if (loading) {
     return (
@@ -74,16 +71,18 @@ const EditReview = () => {
 
   return (
     <View style={styles.container}>
-        <Stack.Screen
-            options={{
-            title: 'Sửa đánh giá sách',
-            headerTitleAlign: 'center',
-            headerLeft: () => (
+      <Stack.Screen
+        options={{
+          title: 'Sửa đánh giá sách',
+          headerTitleAlign: 'center',
+          headerLeft: () => (
             <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
-                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
-            </Pressable>),
-                }}
-                />
+              <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+            </Pressable>
+          ),
+        }}
+      />
+
       <Text style={styles.label}>Nội dung đánh giá</Text>
       <TextInput
         style={styles.input}
@@ -94,23 +93,25 @@ const EditReview = () => {
       />
 
       <Text style={styles.label}>Chọn số sao ({ratePoint})</Text>
-      <Slider
-        style={{ width: '100%', height: 40 }}
-        minimumValue={1}
-        maximumValue={5}
-        step={1}
-        value={ratePoint}
-        onValueChange={setRatePoint}
-        minimumTrackTintColor={COLORS.primary}
-        maximumTrackTintColor="#ddd"
-        thumbTintColor={COLORS.primary}
-      />
+      <View style={styles.starsContainer}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <TouchableOpacity key={star} onPress={() => setRatePoint(star)}>
+            <Ionicons
+              name={star <= ratePoint ? "star" : "star-outline"}
+              size={40}
+               color="#FFD700"
+              style={styles.star}
+            />
+          </TouchableOpacity>
+        ))}
+      </View>
 
       <TouchableOpacity style={styles.saveButton} onPress={handleUpdate}>
         <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
         <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
       </TouchableOpacity>
-      <Loader isLoading={submitting} message='Đang xử lí ...' />
+
+      <Loader isLoading={submitting} message="Đang xử lí ..." />
     </View>
   );
 };
@@ -141,6 +142,15 @@ const styles = StyleSheet.create({
     padding: 12,
     textAlignVertical: 'top',
     height: 100,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  star: {
+    marginHorizontal: 4,
   },
   saveButton: {
     flexDirection: 'row',

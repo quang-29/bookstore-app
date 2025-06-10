@@ -131,8 +131,53 @@ export const PaymentProvider = ({ children }) => {
         console.log(response.data.data);
     }
 
+    const buySingleBookHandlePaymentByCash = async (id, addressId) => {
+        const requestBody = {
+            "bookId": id,
+            "addressId": addressId,
+            "paymentType": "cash_on_delivery",
+            "weight": 4000
+        }
+        const response = await instance.post('/api/order/buyNow', requestBody);
+        console.log(response.data.data);
+    }
+    const buySingleBookHandlePaymentByVNpay = async (id, addressId) => {
+        const requestBody = {
+            "bookId": id,
+            "addressId": addressId,
+            "paymentType": "bank_transfer",
+            "weight": 4000
+        }
+      
+        try {
+          const response = await instance.post('/api/order/buyNow', requestBody);
+          const { orderId, paymentUrl } = response.data.data;
+      
+          console.log("orderId:", orderId);
+          console.log("paymentUrl:", paymentUrl);
+      
+          if (paymentUrl) {
+            // 👉 Thay vì mở trình duyệt, chuyển đến màn WebView trong app
+            router.push({
+              pathname: '/checkout/VnpayWebView',
+              params: {
+                paymentUrl: encodeURIComponent(paymentUrl),
+              },
+            });
+          } else {
+            Alert.alert('Lỗi', 'Không lấy được link thanh toán VNPAY.');
+          }
+      
+        } catch (error) {
+          console.error('Lỗi khi xử lý thanh toán VNPAY:', error);
+          Alert.alert('Lỗi', 'Không thể xử lý thanh toán VNPAY.');
+        }
+    }
+
     return (
-        <PaymentContext.Provider value={{ selectedPaymentMethod, updateSelectedPaymentMethod, handlePaymentByCash, handlePaymentByVNPAY,handlePaymentByVNPAY1 }}>
+        <PaymentContext.Provider value={{ selectedPaymentMethod, updateSelectedPaymentMethod,
+         handlePaymentByCash, handlePaymentByVNPAY,handlePaymentByVNPAY1,
+         buySingleBookHandlePaymentByVNpay, buySingleBookHandlePaymentByCash }}>
             {children}
         </PaymentContext.Provider>
     );

@@ -4,23 +4,24 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Alert,
-  KeyboardAvoidingView,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { COLORS } from '../../constants/theme';
 import instance from '@/axios-instance';
-import Loader from '@/components/Loader'; 
+import Loader from '@/components/Loader';
 import { Stack, useRouter } from 'expo-router';
 import { Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import DropDownPicker from 'react-native-dropdown-picker';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const AddBookScreen = () => {
-  const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(false); 
+  const [open, setOpen] = useState(false);
+  const [categoryItems, setCategoryItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [book, setBook] = useState({
     title: '',
     authorId: '',
@@ -37,16 +38,19 @@ const AddBookScreen = () => {
     imagePath: '',
     publishedDate: '',
   });
+
   const router = useRouter();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await instance.get('/api/category/getAllCategories');
-        if (response.data && response.data.data) {
-          setCategories(response.data.data);
-        } else {
-          setCategories([]);
+        if (response.data?.data) {
+          const formatted = response.data.data.map((category) => ({
+            label: category.categoryName,
+            value: category.id,
+          }));
+          setCategoryItems(formatted);
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -57,11 +61,11 @@ const AddBookScreen = () => {
   }, []);
 
   const handleChange = (field, value) => {
-    setBook({ ...book, [field]: value });
+    setBook((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true); 
+    setIsLoading(true);
     try {
       await instance.post('/api/book/addBook', {
         ...book,
@@ -95,32 +99,48 @@ const AddBookScreen = () => {
       Alert.alert('Lỗi', 'Không thể thêm sách.');
       console.error(error);
     } finally {
-      setIsLoading(false); // ✅ tắt loader
+      setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-        <Stack.Screen
-          options={{
-            title: 'Thêm sách mới',
-            headerTitleAlign: 'center',
-            headerLeft: () => (
-              <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
-                <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
-              </Pressable>
-            ),
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Stack.Screen
+        options={{
+          title: 'Thêm sách mới',
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
+            </Pressable>
+          ),
         }}
       />
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        keyboardShouldPersistTaps="handled"
-      >
 
+      <View style={{ zIndex: 1000, marginBottom: open ? 220 : 12, paddingHorizontal: 20, marginTop: 20 }}>
+        <Text style={styles.label}>Thể loại</Text>
+        <DropDownPicker
+          open={open}
+          setOpen={setOpen}
+          items={categoryItems}
+          setItems={setCategoryItems}
+          value={book.categoryId}
+          setValue={(callback) =>
+            setBook((prev) => ({ ...prev, categoryId: callback(prev.categoryId) }))
+          }
+          placeholder="Chọn thể loại"
+          style={styles.dropdown}
+          dropDownContainerStyle={styles.dropdownContainer}
+        />
+      </View>
+
+      <KeyboardAwareScrollView
+        style={[styles.container]}
+        extraScrollHeight={100}
+        enableOnAndroid
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
         {[
           ['Tiêu đề', 'title'],
           ['Tên tác giả', 'authorId'],
@@ -146,27 +166,6 @@ const AddBookScreen = () => {
           </View>
         ))}
 
-        {/* Thể loại */}
-        <View style={styles.fieldWrapper}>
-          <Text style={styles.label}>Thể loại</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={book.categoryId}
-              onValueChange={(value) => handleChange('categoryId', value)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Chọn thể loại" value="" />
-              {categories.map((category) => (
-                <Picker.Item
-                  key={category.id}
-                  label={category.categoryName}
-                  value={category.categoryName}
-                />
-              ))}
-            </Picker>
-          </View>
-        </View>
-
         {/* Ngày xuất bản */}
         <View style={styles.fieldWrapper}>
           <Text style={styles.label}>Ngày xuất bản</Text>
@@ -181,9 +180,8 @@ const AddBookScreen = () => {
         <TouchableOpacity onPress={handleSubmit} style={styles.submitButton}>
           <Text style={styles.submitButtonText}>Thêm sách</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
-      {/* ✅ Loader ở trên mọi thành phần */}
       <Loader isLoading={isLoading} message="Đang thêm sách..." />
     </KeyboardAvoidingView>
   );
@@ -191,15 +189,8 @@ const AddBookScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    paddingHorizontal: 20,
     backgroundColor: COLORS.lightGray,
-    flex: 1,
-  },
-  heading: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: COLORS.primary,
   },
   fieldWrapper: {
     marginBottom: 12,
@@ -214,13 +205,16 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
   },
-  pickerContainer: {
+  dropdown: {
     backgroundColor: COLORS.white,
-    borderRadius: 8,
+    borderColor: COLORS.gray,
+    minHeight: 50,
+    zIndex: 1000,
   },
-  picker: {
-    height: 50,
-    width: '100%',
+  dropdownContainer: {
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.gray,
+    zIndex: 1000,
   },
   submitButton: {
     backgroundColor: COLORS.primary,

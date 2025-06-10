@@ -9,40 +9,46 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES } from '../../constants/theme';
 import * as ImagePicker from 'expo-image-picker';
 import colors from '@/constants/colors';
 import instance from '@/axios-instance';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import Loader from '@/components/Loader';
+import { useFocusEffect } from '@react-navigation/native'; // ✅ Thêm dòng này
 
 const Search = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [books, setBooks] = useState([]);
-  const [isLoading,setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    setIsLoading(true);
-    const fetchBooks = async () => {
-      try {
-        const response = await instance.get('/api/book/getAllBooks');
-        if (response.data && response.data.content) {
-          setBooks(response.data.content);
+  // ✅ Gọi lại khi màn hình được focus
+  useFocusEffect(
+    useCallback(() => {
+      const fetchBooks = async () => {
+        try {
+          setIsLoading(true);
+          const response = await instance.get('/api/book/getAllBooks');
+          if (response.data && response.data.content) {
+            setBooks(response.data.content);
+          } else {
+            setBooks([]);
+          }
+        } catch (error) {
+          console.error('Error fetching books:', error);
+          Alert.alert('Lỗi', 'Không thể tải danh sách sách.');
+        } finally {
           setIsLoading(false);
-        } else {
-          setBooks([]);
         }
-      } catch (error) {
-        console.error('Error fetching books:', error);
-        Alert.alert('Lỗi', 'Không thể tải danh sách sách.');
-      }
-    };
-    fetchBooks();
-  }, []);
+      };
+
+      fetchBooks();
+    }, [])
+  );
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -137,7 +143,7 @@ const Search = () => {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
+      {loading || isLoading ? (
         <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 30 }} />
       ) : (
         <FlatList
